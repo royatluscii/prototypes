@@ -1,12 +1,12 @@
 # Share readings — 10× prototype
 
-**Path:** `~/Developer/share-readings-10x-prototype/index.html`  
-**Serve:** `python3 -m http.server 8767 --bind 127.0.0.1` → http://127.0.0.1:8767/  
+**Live (GitHub Pages):** https://royatluscii.github.io/share-readings-10x-prototype/  
+**Repo:** https://github.com/royatluscii/share-readings-10x-prototype  
+
+**Local path:** `~/Developer/share-readings-10x-prototype/index.html`  
+**Local serve:** `python3 -m http.server 8767 --bind 127.0.0.1` → http://127.0.0.1:8767/  
 **Compare:** original JTBD wizard at `../share-readings-prototype/` (often :8765)
 
-This is a **QA / eng harness**, not production UI. Scenario + screen state live in the **side inspector/catalog** (outside the phone).
-
----
 
 ## Two-second product question
 
