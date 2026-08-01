@@ -619,6 +619,86 @@
     .plan-card h3 { margin: 0 0 4px; font-size: 22px; font-weight: 700; letter-spacing: -.025em; }
     .plan-card p { margin: 0; font-size: 14px; color: var(--muted); line-height: 1.35; }
 
+
+    .ready-chip { cursor: pointer; }
+    .ready-chip:active { opacity: .85; }
+    .picker-col {
+      display: flex; gap: 8px; margin: 12px 0 8px;
+    }
+    .picker-col select {
+      flex: 1; appearance: none; -webkit-appearance: none;
+      background: var(--surface); border: 0; border-radius: 12px;
+      padding: 14px 12px; font: inherit; font-size: 17px; font-weight: 600;
+      color: var(--ink); text-align: center; box-shadow: 0 0.5px 0 rgba(0,0,0,.04);
+      letter-spacing: -.02em;
+    }
+    .presets { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 14px; }
+    .presets button {
+      border: 0; background: var(--surface); border-radius: 999px; padding: 10px 14px;
+      font: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+      box-shadow: 0 0 0 .5px var(--line-strong); color: var(--ink);
+    }
+    .presets button.on { background: var(--omron); color: #fff; box-shadow: none; }
+    .stepper {
+      display: flex; align-items: center; gap: 16px; justify-content: center;
+      background: var(--surface); border-radius: 14px; padding: 16px; margin-bottom: 12px;
+    }
+    .stepper button {
+      width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--omron-soft);
+      color: var(--omron); font-size: 22px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .stepper .val { font-size: 28px; font-weight: 700; letter-spacing: -.03em; min-width: 80px; text-align: center; }
+    .legal-doc {
+      background: var(--surface); border-radius: 14px; padding: 18px 16px; margin-top: 8px;
+      max-height: 420px; overflow-y: auto; box-shadow: 0 0.5px 0 rgba(0,0,0,.04);
+    }
+    .legal-doc h3 { margin: 0 0 10px; font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+    .legal-doc p { margin: 0 0 12px; font-size: 14px; line-height: 1.45; color: var(--ink-2); }
+    .legal-doc .muted { color: var(--muted); font-size: 13px; }
+    .scan-ring {
+      width: 120px; height: 120px; margin: 24px auto 16px; border-radius: 50%;
+      border: 3px solid var(--omron-soft); border-top-color: var(--omron);
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .pair-found {
+      text-align: center; padding: 20px 16px; background: var(--surface);
+      border-radius: 16px; margin-bottom: 16px;
+    }
+    .pair-found .device-art { margin-bottom: 8px; }
+    .signed-out-state .logo {
+      width: 72px; height: 72px; border-radius: 18px; margin: 0 auto 16px;
+      background: linear-gradient(145deg, #4aa8e0, var(--omron)); color: #fff;
+      display: grid; place-items: center; font-weight: 700; font-size: 22px; letter-spacing: -.04em;
+    }
+    .goals-more { margin-top: 8px; }
+    .goals-more summary {
+      list-style: none; cursor: pointer; font-size: 15px; font-weight: 600;
+      color: var(--omron); padding: 8px 4px; letter-spacing: -.01em;
+    }
+    .goals-more summary::-webkit-details-marker { display: none; }
+    .strength {
+      height: 4px; border-radius: 99px; background: #e5e5ea; margin: 8px 0 4px; overflow: hidden;
+    }
+    .strength > i { display: block; height: 100%; width: 0; background: var(--amber); border-radius: 99px; transition: .2s; }
+    .seg-days.disabled { opacity: .4; pointer-events: none; }
+    .time-sheet .time-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;
+    }
+    .time-sheet .time-grid button {
+      border: 0; background: var(--surface); border-radius: 12px; padding: 14px;
+      font: inherit; font-size: 16px; font-weight: 600; cursor: pointer;
+      box-shadow: 0 0 0 .5px var(--line-strong);
+    }
+    .time-sheet .time-grid button.on { background: var(--omron); color: #fff; box-shadow: none; }
+    .field-error { color: var(--red); font-size: 13px; margin: -4px 0 10px; display: none; }
+    .field-error.show { display: block; }
+    .bmi-chip {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+      font-size: 14px; font-weight: 600; color: var(--omron); background: var(--omron-soft);
+      padding: 6px 12px; border-radius: 999px;
+    }
+
     @media (max-width: 720px) {
       .side-col { max-height: none; width: min(390px, 100%); }
       .launcher { max-height: 300px; }
@@ -667,10 +747,10 @@
                 </div>
                 <h2 id="hdr-name">Roy Pereira</h2>
                 <p class="email" id="hdr-email">roy@example.com</p>
-                <div class="ready-chip" id="ready-chip">
+                <button type="button" class="ready-chip" id="ready-chip" data-ready-go="profile">
                   <span class="dot" id="ready-dot"></span>
                   <span id="ready-line">Ready to measure</span>
-                </div>
+                </button>
               </div>
 
               <button type="button" class="hero-cta" id="hero-cta" data-go="add-device">
@@ -761,11 +841,17 @@
 
               <div class="section-label">Goals <span class="need" id="need-goals" hidden>Incomplete</span></div>
               <div class="group">
-                <button class="row" data-field-row="bpGoal" data-go="edit-bp-goal"><span class="meta"><span class="title">Blood pressure</span></span><span class="val" id="v-bpGoal">120 / 80</span><span class="chev">›</span></button>
-                <button class="row" data-go="edit-weight-goal"><span class="meta"><span class="title">Weight</span></span><span class="val" id="v-weightGoal">75 kg</span><span class="chev">›</span></button>
-                <button class="row" data-go="edit-steps-goal"><span class="meta"><span class="title">Steps</span></span><span class="val" id="v-stepsGoal">8,000</span><span class="chev">›</span></button>
-                <button class="row" data-go="edit-sleep-goal"><span class="meta"><span class="title">Sleep</span></span><span class="val" id="v-sleepGoal">7.5 h</span><span class="chev">›</span></button>
+                <button class="row" data-field-row="bpGoal" data-go="edit-bp-goal"><span class="meta"><span class="title">Blood pressure</span><span class="sub">Required with a BP monitor</span></span><span class="val" id="v-bpGoal">120 / 80</span><span class="chev">›</span></button>
               </div>
+              <details class="goals-more" id="goals-more" open>
+                <summary id="goals-more-sum">More goals</summary>
+                <div class="group" style="margin-top:8px">
+                  <button class="row" data-go="edit-weight-goal"><span class="meta"><span class="title">Weight</span></span><span class="val" id="v-weightGoal">75 kg</span><span class="chev">›</span></button>
+                  <button class="row" data-go="edit-steps-goal"><span class="meta"><span class="title">Steps</span></span><span class="val" id="v-stepsGoal">8,000</span><span class="chev">›</span></button>
+                  <button class="row" data-go="edit-sleep-goal"><span class="meta"><span class="title">Sleep</span></span><span class="val" id="v-sleepGoal">7.5 h</span><span class="chev">›</span></button>
+                </div>
+              </details>
+              <p class="footer-note" id="you-bmi" style="display:none"></p>
             </div>
           </section>
 
@@ -779,7 +865,7 @@
           </section>
 
           <section class="screen" id="s-edit-sex">
-            <div class="nav"><button class="back" data-go="you"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> You</button><div class="t">Sex</div><button class="link" data-go="you">Done</button></div>
+            <div class="nav"><button class="back" data-go="you"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> You</button><div class="t">Sex</div><button class="link" data-go="you">Save</button></div>
             <div class="content">
               <div class="chips" id="sex-chips" style="margin-top:12px">
                 <button type="button" data-sex="Male">Male</button>
@@ -794,7 +880,13 @@
           <section class="screen" id="s-edit-dob">
             <div class="nav"><button class="back" data-go="you"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> You</button><div class="t">Date of birth</div><button class="link" data-save-field="dob">Save</button></div>
             <div class="content">
-              <div class="field" style="margin-top:8px"><label>Date of birth</label><input id="in-dob" type="text" inputmode="text" placeholder="12 May 1984" /></div>
+              <div class="picker-col" id="dob-picker">
+                <select id="dob-day" aria-label="Day"></select>
+                <select id="dob-month" aria-label="Month"></select>
+                <select id="dob-year" aria-label="Year"></select>
+              </div>
+              <input type="hidden" id="in-dob" />
+              <p class="field-error" id="dob-error">Enter a valid date in the past.</p>
               <p class="field-hint">Required for age-based insights and clinic summaries.</p>
             </div>
           </section>
@@ -806,15 +898,25 @@
                 <button type="button" class="on" data-hunit="cm">cm</button>
                 <button type="button" data-hunit="ft">ft / in</button>
               </div>
-              <div class="field"><label>Height</label><input id="in-height" type="text" inputmode="decimal" placeholder="178" /></div>
+              <div class="field" id="height-cm-field"><label>Height (cm)</label><input id="in-height" type="text" inputmode="decimal" placeholder="178" /></div>
+              <div class="dual-field" id="height-ft-field" style="display:none">
+                <div class="field"><label>Feet</label><input id="in-height-ft" type="text" inputmode="numeric" placeholder="5" /></div>
+                <div class="field"><label>Inches</label><input id="in-height-in" type="text" inputmode="numeric" placeholder="10" /></div>
+              </div>
               <p class="field-hint">Used for BMI and body composition from your scale.</p>
+              <div class="bmi-chip" id="height-bmi" style="display:none"></div>
             </div>
           </section>
 
           <section class="screen" id="s-edit-weight">
             <div class="nav"><button class="back" data-go="you"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> You</button><div class="t">Weight</div><button class="link" data-save-field="weight">Save</button></div>
             <div class="content">
-              <div class="field" style="margin-top:8px"><label>Current weight</label><input id="in-weight" type="text" inputmode="decimal" placeholder="78.4 kg" /></div>
+              <div class="callout info" style="margin-top:4px">
+                <div class="callout-ic"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="14" rx="7" ry="5"/></svg></div>
+                <h3>Last from scale</h3>
+                <p id="weight-scale-line">78.4 kg · yesterday. Manual override if needed.</p>
+              </div>
+              <div class="field"><label>Current weight</label><input id="in-weight" type="text" inputmode="decimal" placeholder="78.4" /></div>
               <p class="field-hint">Updates automatically when you weigh in on a paired scale.</p>
             </div>
           </section>
@@ -838,10 +940,9 @@
               <div class="group">
                 <div class="row static"><span class="meta"><span class="title">Hypertension</span></span><button type="button" class="toggle on" id="t-htn" aria-label="Hypertension"></button></div>
                 <div class="row static"><span class="meta"><span class="title">Diabetes</span></span><button type="button" class="toggle" id="t-diabetes" aria-label="Diabetes"></button></div>
-                <button class="row" data-action="toast" data-toast="Cholesterol editor (demo)"><span class="meta"><span class="title">Cholesterol</span><span class="sub">Total / HDL</span></span><span class="chev">›</span></button>
-                <button class="row" data-action="toast" data-toast="Custom conditions (demo)"><span class="meta"><span class="title">Custom conditions</span></span><span class="chev">›</span></button>
+                <div class="row static"><span class="meta"><span class="title">High cholesterol</span></span><button type="button" class="toggle" id="t-chol" aria-label="Cholesterol"></button></div>
               </div>
-              <p class="footer-note">Only what’s needed for your summaries and insights.</p>
+              <p class="footer-note">Used for summaries and insights. This is not a diagnosis. Talk to your clinician about your health.</p>
             </div>
           </section>
 
@@ -853,28 +954,49 @@
                 <div class="field"><label>Diastolic</label><input id="in-bp-dia" type="text" inputmode="numeric" placeholder="80" /></div>
               </div>
               <input type="hidden" id="in-bpGoal" />
-              <p class="field-hint">Your target when using a blood pressure monitor. Ask your clinician if you’re unsure.</p>
+              <p class="field-error" id="bp-error">Enter a valid goal (SYS 80–200, DIA 40–130).</p>
+              <p class="field-hint">mmHg · Your target when using a BP monitor. Ask your clinician if you’re unsure.</p>
+              <div class="presets" id="bp-presets">
+                <button type="button" data-bp="120/80">120 / 80</button>
+                <button type="button" data-bp="130/80">130 / 80</button>
+                <button type="button" data-bp="140/90">140 / 90</button>
+              </div>
             </div>
           </section>
 
           <section class="screen" id="s-edit-weight-goal">
             <div class="nav"><button class="back" data-go="you"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> You</button><div class="t">Weight goal</div><button class="link" data-save-field="weightGoal">Save</button></div>
             <div class="content">
-              <div class="field" style="margin-top:8px"><label>Target weight</label><input id="in-weightGoal" type="text" inputmode="decimal" placeholder="75 kg" /></div>
+              <div class="group" style="margin-top:8px">
+                <div class="row static"><span class="meta"><span class="title">Current</span></span><span class="val" id="wg-current">78.4 kg</span></div>
+              </div>
+              <div class="field" style="margin-top:12px"><label>Target weight</label><input id="in-weightGoal" type="text" inputmode="decimal" placeholder="75" /></div>
+              <p class="field-hint">Uses your unit preference from Settings.</p>
             </div>
           </section>
 
           <section class="screen" id="s-edit-steps-goal">
             <div class="nav"><button class="back" data-go="you"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> You</button><div class="t">Steps goal</div><button class="link" data-save-field="stepsGoal">Save</button></div>
             <div class="content">
-              <div class="field" style="margin-top:8px"><label>Daily steps</label><input id="in-stepsGoal" type="text" inputmode="numeric" placeholder="8,000" /></div>
+              <div class="presets" id="steps-presets" style="margin-top:12px">
+                <button type="button" data-steps="5000">5,000</button>
+                <button type="button" data-steps="8000" class="on">8,000</button>
+                <button type="button" data-steps="10000">10,000</button>
+              </div>
+              <div class="field"><label>Daily steps</label><input id="in-stepsGoal" type="text" inputmode="numeric" placeholder="8,000" /></div>
             </div>
           </section>
 
           <section class="screen" id="s-edit-sleep-goal">
             <div class="nav"><button class="back" data-go="you"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> You</button><div class="t">Sleep goal</div><button class="link" data-save-field="sleepGoal">Save</button></div>
             <div class="content">
-              <div class="field" style="margin-top:8px"><label>Hours per night</label><input id="in-sleepGoal" type="text" inputmode="decimal" placeholder="7.5" /></div>
+              <div class="stepper" style="margin-top:16px">
+                <button type="button" id="sleep-minus" aria-label="Decrease">−</button>
+                <span class="val" id="sleep-val">7.5 h</span>
+                <button type="button" id="sleep-plus" aria-label="Increase">+</button>
+              </div>
+              <input type="hidden" id="in-sleepGoal" value="7.5" />
+              <p class="field-hint" style="text-align:center">Hours per night · 0.5 h steps</p>
             </div>
           </section>
 
@@ -949,7 +1071,7 @@
             <div class="content">
               <div class="device-hero">
                 <div class="device-art scale"><div class="plate"></div></div>
-                <h3>HN-300T2</h3>
+                <h3 id="v-scale-name">HN-300T2</h3>
                 <p class="model">Body composition scale</p>
                 <div class="meta-line">
                   <span><span class="dot-g"></span> Connected</span>
@@ -957,13 +1079,23 @@
                 </div>
                 <button type="button" class="transfer-btn" data-action="toast" data-toast="Transferring readings…">Transfer now</button>
               </div>
+              <div class="section-label tight">Device</div>
               <div class="group">
-                <div class="row static"><span class="meta"><span class="title">Device name</span></span><span class="val">HN-300T2</span></div>
-                <button class="row" data-go="measure-schedule"><span class="meta"><span class="title">Measure schedule</span></span><span class="val">Off</span><span class="chev">›</span></button>
+                <button class="row" data-go="edit-scale-name"><span class="meta"><span class="title">Device name</span></span><span class="val" id="v-scale-name-row">HN-300T2</span><span class="chev">›</span></button>
+                <button class="row" data-go="measure-schedule"><span class="meta"><span class="title">Measure schedule</span><span class="sub">Daily reminder to weigh in</span></span><span class="val" id="v-scale-sched">Off</span><span class="chev">›</span></button>
+                <button class="row" data-go="device-display"><span class="meta"><span class="title">Display settings</span><span class="sub">On-device date &amp; time format</span></span><span class="chev">›</span></button>
               </div>
               <div class="group" style="margin-top:20px">
-                <button class="row center-text destructive" data-go="remove-device"><span class="meta"><span class="title">Remove device</span></span></button>
+                <button class="row center-text destructive" data-go="remove-device" data-remove-target="scale"><span class="meta"><span class="title">Remove device</span></span></button>
               </div>
+            </div>
+          </section>
+
+          <section class="screen" id="s-edit-scale-name">
+            <div class="nav"><button class="back" data-go="device-scale"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Device</button><div class="t">Name</div><button class="link" id="save-scale-name">Save</button></div>
+            <div class="content">
+              <div class="field" style="margin-top:8px"><label>Device name</label><input id="in-scale-name" type="text" /></div>
+              <p class="field-hint">A name you’ll recognize in lists and reminders.</p>
             </div>
           </section>
 
@@ -985,17 +1117,19 @@
               </div>
               <div class="group">
                 <div class="row static"><span class="meta"><span class="title">Schedule</span></span><button type="button" class="toggle on" id="t-sched" aria-label="Schedule"></button></div>
-                <button class="row" id="row-sched-time" data-action="toast" data-toast="Time picker (demo)"><span class="meta"><span class="title">Time</span></span><span class="val" id="v-sched-time">8:00 AM</span><span class="chev">›</span></button>
-                <button class="row" id="row-sched-days" data-action="toast" data-toast="Day picker (demo)"><span class="meta"><span class="title">Days</span></span><span class="val" id="v-sched-days">Every day</span><span class="chev">›</span></button>
+                <button class="row" id="row-sched-time" type="button"><span class="meta"><span class="title">Time</span></span><span class="val" id="v-sched-time">8:00 AM</span><span class="chev">›</span></button>
+                <div class="row static" id="row-sched-days"><span class="meta"><span class="title">Days</span></span><span class="val" id="v-sched-days">Every day</span></div>
               </div>
-              <div class="section-label">Quick days</div>
+              <div class="section-label">Days</div>
               <div class="seg-days" id="day-chips">
                 <button type="button" class="on">M</button><button type="button" class="on">T</button>
                 <button type="button" class="on">W</button><button type="button" class="on">T</button>
                 <button type="button" class="on">F</button><button type="button" class="on">S</button>
                 <button type="button" class="on">S</button>
               </div>
-              <p class="footer-note">Requires notification permission in Settings.</p>
+              <div class="group" style="margin-top:16px">
+                <button class="row" data-go="notifications"><span class="meta"><span class="title">Notification settings</span><span class="sub">Permission &amp; alerts</span></span><span class="chev">›</span></button>
+              </div>
             </div>
           </section>
 
@@ -1003,8 +1137,8 @@
             <div class="nav"><button class="back" data-go="device-detail"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Device</button><div class="t">Display</div></div>
             <div class="content">
               <div class="group" style="margin-top:8px">
-                <button class="row" data-action="toast" data-toast="Date format options"><span class="meta"><span class="title">Date format on device</span></span><span class="val">DD/MM</span><span class="chev">›</span></button>
-                <button class="row" data-action="toast" data-toast="Time format options"><span class="meta"><span class="title">Time format</span></span><span class="val">24h</span><span class="chev">›</span></button>
+                <button class="row" id="btn-date-fmt" type="button"><span class="meta"><span class="title">Date format on device</span></span><span class="val" id="v-date-fmt">DD/MM</span><span class="chev">›</span></button>
+                <button class="row" id="btn-time-fmt" type="button"><span class="meta"><span class="title">Time format</span></span><span class="val" id="v-time-fmt">24h</span><span class="chev">›</span></button>
               </div>
               <p class="footer-note">Affects the hardware screen only. App units are in Settings.</p>
             </div>
@@ -1022,10 +1156,45 @@
               </div>
               <div class="section-label">Device type</div>
               <div class="group">
-                <button class="row with-ic" data-action="pair-demo"><span class="ic ic-teal"><svg viewBox="0 0 24 24"><path d="M4 14h4l2-4 2 8 2-4h6"/></svg></span><span class="meta"><span class="title">Blood pressure monitor</span><span class="sub">Upper-arm &amp; wrist models</span></span><span class="chev">›</span></button>
-                <button class="row with-ic" data-action="pair-demo"><span class="ic ic-mint"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="14" rx="7" ry="5"/></svg></span><span class="meta"><span class="title">Body composition scale</span><span class="sub">Weight &amp; body metrics</span></span><span class="chev">›</span></button>
-                <button class="row with-ic" data-action="pair-demo"><span class="ic ic-red"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-5 3 10 2-5h7"/></svg></span><span class="meta"><span class="title">ECG device</span><span class="sub">Heart rhythm recording</span></span><span class="chev">›</span></button>
+                <button class="row with-ic" data-action="pair-start" data-pair-type="bp"><span class="ic ic-teal"><svg viewBox="0 0 24 24"><path d="M4 14h4l2-4 2 8 2-4h6"/></svg></span><span class="meta"><span class="title">Blood pressure monitor</span><span class="sub">Upper-arm &amp; wrist models</span></span><span class="chev">›</span></button>
+                <button class="row with-ic" data-action="pair-start" data-pair-type="scale"><span class="ic ic-mint"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="14" rx="7" ry="5"/></svg></span><span class="meta"><span class="title">Body composition scale</span><span class="sub">Weight &amp; body metrics</span></span><span class="chev">›</span></button>
+                <button class="row with-ic" data-action="pair-start" data-pair-type="ecg"><span class="ic ic-red"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-5 3 10 2-5h7"/></svg></span><span class="meta"><span class="title">ECG device</span><span class="sub">Heart rhythm recording</span></span><span class="chev">›</span></button>
               </div>
+            </div>
+          </section>
+
+          <section class="screen" id="s-pair-scan">
+            <div class="nav"><button class="back" data-go="add-device"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Back</button><div class="t">Searching</div></div>
+            <div class="content" style="text-align:center">
+              <div class="scan-ring"></div>
+              <h3 style="margin:0 0 8px;font-size:20px;font-weight:700;letter-spacing:-.02em" id="pair-scan-title">Looking for your device</h3>
+              <p style="margin:0;font-size:15px;color:var(--muted);line-height:1.4;max-width:280px;margin-left:auto;margin-right:auto">Keep the device nearby and in pairing mode.</p>
+            </div>
+          </section>
+
+          <section class="screen" id="s-pair-found">
+            <div class="nav"><button class="back" data-go="add-device"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Back</button><div class="t">Found</div></div>
+            <div class="content pad">
+              <div class="pair-found">
+                <div class="device-art bp" id="pair-found-art"><div class="cuff"></div><div class="display">OK</div></div>
+                <h3 id="pair-found-name" style="margin:0 0 4px;font-size:20px;font-weight:700">HEM-7156</h3>
+                <p style="margin:0;font-size:14px;color:var(--muted)" id="pair-found-sub">Blood pressure monitor</p>
+              </div>
+              <p class="footer-note center">Is this your device?</p>
+            </div>
+            <div class="footer">
+              <button class="btn primary" data-action="pair-confirm">Pair this device</button>
+              <button class="btn ghost" data-go="add-device">Not this one</button>
+            </div>
+          </section>
+
+          <section class="screen" id="s-pair-success">
+            <div class="center-state">
+              <div class="badge">✓</div>
+              <h2>Device paired</h2>
+              <p id="pair-success-msg">You’re ready to take a reading.</p>
+              <button class="btn primary" style="max-width:240px" data-action="pair-done">View devices</button>
+              <button class="btn ghost" style="max-width:240px" data-go="measure-schedule">Set a reminder</button>
             </div>
           </section>
 
@@ -1034,7 +1203,7 @@
             <div class="content pad">
               <div class="callout danger">
                 <div class="callout-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></div>
-                <h3>Remove this device?</h3>
+                <h3 id="remove-title">Remove HEM-7156?</h3>
                 <p>Stops syncing new readings. Past readings stay in the app unless you delete your account.</p>
               </div>
             </div>
@@ -1050,9 +1219,8 @@
               <div class="section-label tight">Phone platforms</div>
               <div class="group">
                 <button class="row with-ic" data-go="apps-health"><span class="ic ic-pink"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg></span><span class="meta"><span class="title">Apple Health</span><span class="sub">Choose which data to share</span></span><span class="val accent" id="v-health">On</span><span class="chev">›</span></button>
-                <button class="row with-ic" data-action="toast" data-toast="Google Fit (demo)"><span class="ic ic-green"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 16 0"/><circle cx="12" cy="12" r="2"/></svg></span><span class="meta"><span class="title">Google Fit</span></span><span class="chev">›</span></button>
               </div>
-              <p class="footer-note">Separate from OMRON cloud backup.</p>
+              <p class="footer-note">On iPhone, Apple Health is available. Google Fit appears on Android. Separate from OMRON cloud backup.</p>
             </div>
           </section>
 
@@ -1065,7 +1233,9 @@
                 <div class="row static"><span class="meta"><span class="title">Steps</span></span><button type="button" class="toggle" data-health-toggle aria-label="Steps"></button></div>
                 <div class="row static"><span class="meta"><span class="title">Heart rate</span></span><button type="button" class="toggle on" data-health-toggle aria-label="Heart rate"></button></div>
               </div>
-              <p class="footer-note">iOS may also show system Health permissions.</p>
+              <div class="group" style="margin-top:16px">
+                <button class="row" data-action="toast" data-toast="Opens iOS Health permissions"><span class="meta"><span class="title">Open system Health</span><span class="sub">iOS permissions for OMRON Connect</span></span><span class="chev">›</span></button>
+              </div>
             </div>
           </section>
 
@@ -1077,9 +1247,14 @@
                 <h3>ECG hardware connected</h3>
                 <p>Recording options for your paired ECG device.</p>
               </div>
+              <div class="section-label">Recording</div>
               <div class="group">
-                <button class="row" data-action="toast" data-toast="Recording options"><span class="meta"><span class="title">Recording options</span></span><span class="chev">›</span></button>
-                <button class="row" data-action="toast" data-toast="Filter options"><span class="meta"><span class="title">Filter options</span></span><span class="chev">›</span></button>
+                <div class="row static"><span class="meta"><span class="title">30-second recording</span><span class="sub">Recommended length</span></span><button type="button" class="toggle on" data-health-toggle aria-label="30s"></button></div>
+                <div class="row static"><span class="meta"><span class="title">Voice guide</span></span><button type="button" class="toggle on" data-health-toggle aria-label="Voice"></button></div>
+              </div>
+              <div class="section-label">Filters</div>
+              <div class="group">
+                <div class="row static"><span class="meta"><span class="title">Noise filter</span><span class="sub">Reduce movement artifacts</span></span><button type="button" class="toggle on" data-health-toggle aria-label="Noise"></button></div>
               </div>
             </div>
           </section>
@@ -1092,9 +1267,13 @@
                 <h3>3 reports</h3>
                 <p>Atrial fibrillation detection history from compatible hardware.</p>
               </div>
+              <div class="section-label tight">History</div>
               <div class="group">
-                <button class="row" data-action="toast" data-toast="Open AFib history"><span class="meta"><span class="title">View AFib history</span></span><span class="val accent">3 reports</span><span class="chev">›</span></button>
+                <button class="row" data-action="toast" data-toast="Report detail"><span class="meta"><span class="title">Possible AFib</span><span class="sub">12 Jul 2026 · 8:14 AM</span></span><span class="chev">›</span></button>
+                <button class="row" data-action="toast" data-toast="Report detail"><span class="meta"><span class="title">No AFib detected</span><span class="sub">3 Jul 2026 · 7:52 AM</span></span><span class="chev">›</span></button>
+                <button class="row" data-action="toast" data-toast="Report detail"><span class="meta"><span class="title">Possible AFib</span><span class="sub">18 Jun 2026 · 9:01 AM</span></span><span class="chev">›</span></button>
               </div>
+              <p class="footer-note">Not a diagnosis. Share reports with your clinician if concerned.</p>
             </div>
           </section>
 
@@ -1110,6 +1289,7 @@
                 </div>
                 <div class="row static"><span class="meta"><span class="title">Last backup</span></span><span class="val" id="last-backup">Today 7:12</span></div>
                 <div class="row static" id="row-unsynced" style="display:none"><span class="meta"><span class="title">Not yet backed up</span><span class="sub">On this phone only</span></span><span class="val missing" id="v-unsynced">12</span></div>
+                <button class="row" id="btn-backup-now" type="button"><span class="meta"><span class="title">Back up now</span></span><span class="chev">›</span></button>
               </div>
               <p class="footer-note">Keeps readings safe across phones. This is not product analytics.</p>
 
@@ -1130,17 +1310,19 @@
             <div class="nav"><button class="back" data-go="account"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Account</button><div class="t">Email</div><button class="link" id="save-acct-email">Save</button></div>
             <div class="content">
               <div class="field" style="margin-top:8px"><label>Account email</label><input id="in-acct-email" type="email" autocomplete="email" /></div>
-              <p class="field-hint">Used to sign in. Changing may require verification.</p>
+              <p class="field-hint">Used to sign in. After you save, we’ll send a verification link to the new address.</p>
             </div>
           </section>
 
           <section class="screen" id="s-account-password">
             <div class="nav"><button class="back" data-go="account"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Account</button><div class="t">Password</div></div>
             <div class="content">
-              <div class="field" style="margin-top:8px"><label>Current password</label><input type="password" placeholder="••••••••" autocomplete="current-password" /></div>
-              <div class="field"><label>New password</label><input type="password" placeholder="At least 8 characters" autocomplete="new-password" /></div>
-              <div class="field"><label>Confirm new password</label><input type="password" placeholder="Repeat new password" autocomplete="new-password" /></div>
-              <button class="btn primary" style="margin-top:8px" data-action="toast" data-toast="Password updated">Update password</button>
+              <div class="field" style="margin-top:8px"><label>Current password</label><input type="password" id="pw-cur" placeholder="••••••••" autocomplete="current-password" /></div>
+              <div class="field"><label>New password</label><input type="password" id="pw-new" placeholder="At least 8 characters" autocomplete="new-password" /></div>
+              <div class="strength"><i id="pw-strength"></i></div>
+              <p class="field-hint" id="pw-strength-label">Strength</p>
+              <div class="field"><label>Confirm new password</label><input type="password" id="pw-confirm" placeholder="Repeat new password" autocomplete="new-password" /></div>
+              <button class="btn primary" style="margin-top:8px" id="btn-pw-update" type="button">Update password</button>
             </div>
           </section>
 
@@ -1157,6 +1339,7 @@
                   <div class="check"><input type="checkbox" id="dc" /><label for="dc">I understand my account and cloud data will be permanently deleted.</label></div>
                 </div>
               </div>
+              <div class="field" style="margin-top:12px"><label>Type your email to confirm</label><input id="in-delete-email" type="email" placeholder="roy@example.com" autocomplete="off" /></div>
               <div class="section-label">Not the same as</div>
               <div class="group">
                 <div class="compare-row"><span>Sign out</span><strong>Keeps account</strong></div>
@@ -1170,11 +1353,13 @@
           </section>
 
           <section class="screen" id="s-deleted">
-            <div class="center-state">
-              <div class="badge">✓</div>
+            <div class="center-state signed-out-state">
+              <div class="logo">OC</div>
               <h2>Account deleted</h2>
-              <p>You’ll return to the sign-in screen.</p>
-              <button class="btn primary" style="max-width:240px" data-go="profile">Done</button>
+              <p>Your OMRON Connect account and cloud data are gone. Sign in or create an account to continue.</p>
+              <button class="btn primary" style="max-width:260px" data-action="toast" data-toast="Would open sign-in">Sign in</button>
+              <button class="btn ghost" style="max-width:260px" data-action="toast" data-toast="Would open create account">Create account</button>
+              <button class="btn ghost" style="max-width:260px;color:var(--muted);font-size:14px" data-go="profile">Back to prototype root</button>
             </div>
           </section>
 
@@ -1216,13 +1401,30 @@
           <section class="screen" id="s-legal-terms">
             <div class="nav"><button class="back" data-go="privacy"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Privacy</button><div class="t">Terms</div></div>
             <div class="content">
-              <div class="callout"><h3>Terms of use</h3><p>The full legal document opens here in a secure web view.</p></div>
+              <div class="legal-doc">
+                <h3>Terms of use</h3>
+                <p class="muted">OMRON Connect · Last updated 2026</p>
+                <p>These Terms govern your use of the OMRON Connect app and related services. By using the app you agree to these Terms.</p>
+                <p><strong>1. The service.</strong> OMRON Connect helps you transfer, view, and manage readings from compatible OMRON devices. It is not a substitute for professional medical advice.</p>
+                <p><strong>2. Your account.</strong> You are responsible for keeping sign-in credentials secure and for activity under your account.</p>
+                <p><strong>3. Health data.</strong> How we handle health data is described in the Privacy statement. Cloud backup is optional and controlled in the app.</p>
+                <p><strong>4. Devices.</strong> Pairing and transfer depend on Bluetooth and device firmware. Follow device manuals for safe use of hardware.</p>
+                <p class="muted">Full legal text would scroll here in production (web view).</p>
+              </div>
             </div>
           </section>
           <section class="screen" id="s-legal-privacy">
             <div class="nav"><button class="back" data-go="privacy"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Privacy</button><div class="t">Privacy</div></div>
             <div class="content">
-              <div class="callout"><h3>Privacy statement</h3><p>How we collect, use, and protect your health data. Separate from the cloud backup toggle.</p></div>
+              <div class="legal-doc">
+                <h3>Privacy statement</h3>
+                <p class="muted">How we collect, use, and protect your health data</p>
+                <p><strong>What we collect.</strong> Account details, device identifiers, and health readings you transfer (for example blood pressure and weight).</p>
+                <p><strong>Cloud backup.</strong> If you turn on cloud backup, readings sync to OMRON cloud services so you can use more than one phone. This is separate from product analytics.</p>
+                <p><strong>Your choices.</strong> You can turn cloud off, manage consent, or request access/deletion via Support → Privacy rights.</p>
+                <p><strong>Sharing.</strong> We do not sell your health data. Connected apps (for example Apple Health) only share what you enable.</p>
+                <p class="muted">Full privacy statement would open as a secure web view in production.</p>
+              </div>
             </div>
           </section>
           <section class="screen" id="s-legal-consent">
@@ -1240,10 +1442,16 @@
             <div class="nav"><button class="back" data-go="settings"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Settings</button><div class="t">Notifications</div></div>
             <div class="content">
               <div class="group" style="margin-top:8px">
-                <div class="row static"><span class="meta"><span class="title">Allow notifications</span><span class="sub">Measure reminders and important alerts</span></span><button class="toggle on" id="t-notif" aria-label="Notifications"></button></div>
+                <div class="row static"><span class="meta"><span class="title">Allow notifications</span><span class="sub">Master control for this app</span></span><button class="toggle on" id="t-notif" aria-label="Notifications"></button></div>
+              </div>
+              <div class="section-label">Categories</div>
+              <div class="group" id="notif-cats">
+                <div class="row static"><span class="meta"><span class="title">Measure reminders</span><span class="sub">Schedules on your devices</span></span><button class="toggle on" data-health-toggle aria-label="Reminders"></button></div>
+                <div class="row static"><span class="meta"><span class="title">Transfer &amp; sync alerts</span></span><button class="toggle on" data-health-toggle aria-label="Transfer"></button></div>
+                <div class="row static"><span class="meta"><span class="title">Tips &amp; product news</span><span class="sub">Optional marketing</span></span><button class="toggle" data-health-toggle aria-label="Tips"></button></div>
               </div>
               <div class="group" style="margin-top:20px">
-                <button class="row" data-go="devices"><span class="meta"><span class="title">Device measure schedules</span><span class="sub">Set per device under Devices</span></span><span class="chev">›</span></button>
+                <button class="row" data-go="devices"><span class="meta"><span class="title">Device measure schedules</span><span class="sub">Set time &amp; days per device</span></span><span class="chev">›</span></button>
               </div>
             </div>
           </section>
@@ -1312,6 +1520,10 @@
                 <button class="row with-ic" data-action="toast" data-toast="Open PDF manual"><span class="ic ic-teal"><svg viewBox="0 0 24 24"><path d="M4 14h4l2-4 2 8 2-4h6"/></svg></span><span class="meta"><span class="title">BP Monitor HEM-7156</span><span class="sub">PDF manual</span></span><span class="chev">›</span></button>
                 <button class="row with-ic" data-action="toast" data-toast="Open PDF manual"><span class="ic ic-mint"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="14" rx="7" ry="5"/></svg></span><span class="meta"><span class="title">Body scale</span><span class="sub">PDF manual</span></span><span class="chev">›</span></button>
               </div>
+              <div class="callout" id="manuals-empty" style="display:none;margin-top:8px">
+                <h3>No paired devices</h3>
+                <p>Pair a device to see its manual here. You can still browse support articles in FAQ.</p>
+              </div>
               <p class="footer-note">Paired devices appear first.</p>
             </div>
           </section>
@@ -1344,7 +1556,7 @@
                   <span class="chev">›</span>
                 </button>
               </div>
-              <p class="footer-note">Number shown for your region (demo: US). Other regions get local support lines in production.</p>
+              <p class="footer-note">US support line for this demo. Your region’s number appears automatically in the app.</p>
 
               <div class="section-label">Before you call</div>
               <div class="group">
@@ -1395,6 +1607,7 @@
               <div class="group"><button class="row" data-action="toast" data-toast="Pick area"><span class="meta"><span class="title">Area</span></span><span class="val">Devices</span><span class="chev">›</span></button></div>
               <div class="section-label">Your idea</div>
               <div class="field"><textarea id="feedback-text" placeholder="Describe the change you’d like to see…"></textarea></div>
+              <p class="footer-note" id="feedback-meta">Includes app version 8.0.0 and device list when you submit.</p>
             </div>
             <div class="footer">
               <button class="btn primary" data-action="toast" data-toast="Feedback submitted" data-go="help">Submit</button>
@@ -1436,8 +1649,15 @@
                 <h3>Premium</h3>
                 <p>Advanced insights and multi-device cloud features.</p>
               </div>
+              <div class="section-label tight">Includes</div>
               <div class="group">
+                <div class="row static"><span class="meta"><span class="title">Multi-device cloud sync</span></span></div>
+                <div class="row static"><span class="meta"><span class="title">Deeper trend insights</span></span></div>
+                <div class="row static"><span class="meta"><span class="title">Priority support options</span></span></div>
+              </div>
+              <div class="group" style="margin-top:16px">
                 <button class="row" data-action="toast" data-toast="Would open plans"><span class="meta"><span class="title">Change plan</span></span><span class="chev">›</span></button>
+                <button class="row" data-action="toast" data-toast="Restore purchases"><span class="meta"><span class="title">Restore purchases</span></span><span class="chev">›</span></button>
               </div>
               <div class="group" style="margin-top:20px">
                 <button class="row center-text destructive" data-action="toast" data-toast="Would open cancel flow"><span class="meta"><span class="title">Cancel subscription</span></span></button>
@@ -1483,6 +1703,23 @@
           </div>
         </div>
 
+        <div class="sheet-bg" id="time-sheet">
+          <div class="sheet time-sheet">
+            <div class="sheet-handle"></div>
+            <h3>Reminder time</h3>
+            <p>When should we remind you to measure?</p>
+            <div class="time-grid" id="time-grid">
+              <button type="button" data-time="7:00 AM">7:00 AM</button>
+              <button type="button" data-time="8:00 AM" class="on">8:00 AM</button>
+              <button type="button" data-time="9:00 AM">9:00 AM</button>
+              <button type="button" data-time="12:00 PM">12:00 PM</button>
+              <button type="button" data-time="6:00 PM">6:00 PM</button>
+              <button type="button" data-time="8:00 PM">8:00 PM</button>
+            </div>
+            <button class="btn primary" id="time-sheet-done">Done</button>
+          </div>
+        </div>
+
         <div class="toast" id="toast"><span class="t-check">✓</span><span id="toast-msg"></span></div>
         <div class="home-ind"></div>
       </div></div>
@@ -1509,6 +1746,9 @@
           <button type="button" data-go="device-detail" data-screen="device-detail"><code>P-21</code> <strong>BP device detail</strong></button>
           <button type="button" data-go="measure-schedule" data-screen="measure-schedule"><code>P-22</code> <strong>Measure schedule</strong></button>
           <button type="button" data-go="add-device" data-screen="add-device"><code>P-23</code> <strong>Add device</strong></button>
+          <button type="button" data-go="pair-scan" data-screen="pair-scan"><code>P-23a</code> <strong>Pair · scanning</strong></button>
+          <button type="button" data-go="pair-found" data-screen="pair-found"><code>P-23b</code> <strong>Pair · found</strong></button>
+          <button type="button" data-go="pair-success" data-screen="pair-success"><code>P-23c</code> <strong>Pair · success</strong></button>
           <button type="button" data-go="remove-device" data-screen="remove-device"><code>P-24</code> <strong>Remove device</strong></button>
           <button type="button" data-go="apps" data-screen="apps"><code>P-25</code> <strong>Connected apps</strong></button>
           <button type="button" data-go="apps-health" data-screen="apps-health"><code>P-26</code> <strong>Apple Health types</strong></button>
@@ -1571,8 +1811,12 @@ const SCREENS = {
   "device-scale": { id: "P-21b", name: "Scale device" },
   "measure-schedule": { id: "P-22", name: "Measure schedule" },
   "add-device": { id: "P-23", name: "Add device" },
+  "pair-scan": { id: "P-23a", name: "Pair scanning" },
+  "pair-found": { id: "P-23b", name: "Pair found" },
+  "pair-success": { id: "P-23c", name: "Pair success" },
   "remove-device": { id: "P-24", name: "Remove device" },
   "edit-device-name": { id: "P-21c", name: "Device name" },
+  "edit-scale-name": { id: "P-21e", name: "Scale name" },
   "device-display": { id: "P-21d", name: "Display settings" },
   apps: { id: "P-25", name: "Connected apps" },
   "apps-health": { id: "P-26", name: "Apple Health" },
@@ -1623,7 +1867,15 @@ const state = {
   notifOn: true,
   units: { week: "Monday", distance: "km", weight: "kg", height: "cm", temp: "°C" },
   email: "roy@example.com",
-  medical: { htn: true, diabetes: false },
+  medical: { htn: true, diabetes: false, chol: false },
+  sleepHours: 7.5,
+  pairType: "bp",
+  pairModel: "HEM-7156",
+  removeTarget: "bp",
+  dateFmt: "DD/MM",
+  timeFmt: "24h",
+  scaleName: "HN-300T2",
+  readyGo: "profile",
 };
 
 function toast(msg) {
@@ -1691,7 +1943,28 @@ function syncYouUI() {
   const med = [];
   if (state.medical.htn) med.push("Hypertension");
   if (state.medical.diabetes) med.push("Diabetes");
+  if (state.medical.chol) med.push("High cholesterol");
   document.getElementById("v-medical-sub").textContent = med.join(", ") || "None set";
+
+  const goalsMore = document.getElementById("goals-more");
+  if (goalsMore) {
+    // Collapse optional goals when profile complete
+    if (complete) goalsMore.open = false;
+    else goalsMore.open = true;
+  }
+  const bmiEl = document.getElementById("you-bmi");
+  if (bmiEl) {
+    const h = parseFloat(String(state.you.height).replace(/[^0-9.]/g, ""));
+    const w = parseFloat(String(state.you.weight).replace(/[^0-9.]/g, ""));
+    if (h > 0 && w > 0 && !isMissing(state.you.height) && !isMissing(state.you.weight)) {
+      const m = h / 100;
+      const bmi = w / (m * m);
+      bmiEl.style.display = "";
+      bmiEl.textContent = `Estimated BMI ${bmi.toFixed(1)} from height & weight.`;
+    } else {
+      bmiEl.style.display = "none";
+    }
+  }
 
   document.getElementById("hdr-name").textContent = state.you.name || "—";
   document.getElementById("hdr-av").textContent = (state.you.name || "?").trim().charAt(0).toUpperCase();
@@ -1722,7 +1995,7 @@ function syncRoot() {
   rc.classList.toggle("warn", !state.cloudOn);
   setPill(document.getElementById("pill-cloud"), state.cloudOn ? "ok" : "warn", state.cloudOn ? "On" : "Off");
   document.getElementById("sub-cloud").textContent = state.cloudOn
-    ? (state.unsynced ? `${state.unsynced} readings not backed up yet` : `Last backup today at 7:12`)
+    ? (state.unsynced ? `${state.unsynced} readings not backed up yet` : `Last backup ${state.lastBackup}`)
     : "Phone only · new data stays on this device";
   document.getElementById("settings-cloud-val").textContent = state.cloudOn ? "On" : "Off";
   document.getElementById("cloud-desc").textContent = state.cloudOn
@@ -1765,18 +2038,40 @@ function syncRoot() {
   if (n === 0) {
     ready.textContent = "Add a device to get started";
     chip.classList.add("warn");
+    state.readyGo = "add-device";
   } else if (!state.cloudOn) {
     ready.textContent = "Cloud backup is off";
     chip.classList.add("warn");
+    state.readyGo = "account";
   } else if (youMiss) {
     ready.textContent = "Finish your profile";
     chip.classList.add("warn");
+    state.readyGo = "you";
   } else if (state.unsynced) {
     ready.textContent = `${state.unsynced} readings not backed up`;
     chip.classList.add("warn");
+    state.readyGo = "account";
   } else {
     ready.textContent = "Ready to measure";
+    state.readyGo = "devices";
   }
+  chip.dataset.readyGo = state.readyGo;
+
+  // manuals empty
+  const manList = document.getElementById("manuals-list");
+  const manEmpty = document.getElementById("manuals-empty");
+  if (manList && manEmpty) {
+    manList.style.display = n === 0 ? "none" : "";
+    manEmpty.style.display = n === 0 ? "block" : "none";
+  }
+
+  // schedule disabled days
+  const dayChips = document.getElementById("day-chips");
+  if (dayChips) dayChips.classList.toggle("disabled", !state.scheduleOn);
+
+  document.getElementById("t-chol")?.classList.toggle("on", !!state.medical.chol);
+  const wg = document.getElementById("wg-current");
+  if (wg) wg.textContent = isMissing(state.you.weight) ? "—" : state.you.weight;
 
   document.getElementById("signout-unsynced").style.display = state.unsynced ? "" : "none";
   document.getElementById("signout-unsynced-n").textContent = `${state.unsynced} on this phone`;
@@ -1838,10 +2133,20 @@ function go(id) {
   if (c) c.scrollTop = 0;
 
   if (id === "edit-name") document.getElementById("in-name").value = isMissing(state.you.name) ? "" : state.you.name;
-  if (id === "edit-dob") document.getElementById("in-dob").value = isMissing(state.you.dob) ? "" : state.you.dob;
+  if (id === "edit-dob") {
+    const raw = isMissing(state.you.dob) ? "12 May 1984" : state.you.dob;
+    const parts = raw.split(" ");
+    if (parts.length >= 3) {
+      document.getElementById("dob-day").value = String(parseInt(parts[0], 10));
+      document.getElementById("dob-month").value = parts[1];
+      document.getElementById("dob-year").value = parts[2];
+    }
+    document.getElementById("dob-error")?.classList.remove("show");
+  }
   if (id === "edit-height") {
     const h = state.you.height;
     document.getElementById("in-height").value = isMissing(h) ? "" : String(h).replace(/\s*cm$/,"");
+    document.getElementById("bp-error")?.classList.remove("show");
   }
   if (id === "edit-weight") document.getElementById("in-weight").value = isMissing(state.you.weight) ? "" : state.you.weight;
   if (id === "edit-bp-goal") {
@@ -1850,10 +2155,27 @@ function go(id) {
     document.getElementById("in-bp-sys").value = parts[0] || "";
     document.getElementById("in-bp-dia").value = parts[1] || "";
     document.getElementById("in-bpGoal").value = raw;
+    document.getElementById("bp-error")?.classList.remove("show");
   }
-  if (id === "edit-weight-goal") document.getElementById("in-weightGoal").value = isMissing(state.you.weightGoal) ? "" : state.you.weightGoal;
+  if (id === "edit-sleep-goal") {
+    const n = parseFloat(String(state.you.sleepGoal).replace(/[^0-9.]/g, "")) || 7.5;
+    state.sleepHours = n;
+    document.getElementById("sleep-val").textContent = `${n} h`;
+    document.getElementById("in-sleepGoal").value = String(n);
+  }
+  if (id === "edit-scale-name") document.getElementById("in-scale-name").value = state.scaleName;
+  if (id === "remove-device") {
+    const name = state.removeTarget === "scale" ? state.scaleName : (document.getElementById("v-dev-name")?.textContent || "HEM-7156");
+    document.getElementById("remove-title").textContent = `Remove ${name}?`;
+  }
+  if (id === "delete") {
+    document.getElementById("dc").checked = false;
+    document.getElementById("db").disabled = true;
+    const de = document.getElementById("in-delete-email");
+    if (de) de.value = "";
+  }
+  if (id === "edit-weight-goal") document.getElementById("in-weightGoal").value = isMissing(state.you.weightGoal) ? "" : String(state.you.weightGoal).replace(/\s*(kg|lb)$/i, "").trim();
   if (id === "edit-steps-goal") document.getElementById("in-stepsGoal").value = isMissing(state.you.stepsGoal) ? "" : state.you.stepsGoal;
-  if (id === "edit-sleep-goal") document.getElementById("in-sleepGoal").value = isMissing(state.you.sleepGoal) ? "" : String(state.you.sleepGoal).replace(/\s*h$/,"");
   if (id === "edit-sex") {
     document.querySelectorAll("#sex-chips button").forEach(b => b.classList.toggle("on", b.dataset.sex === state.you.sex));
   }
@@ -1864,11 +2186,6 @@ function go(id) {
   }
   if (id === "edit-device-name") document.getElementById("in-dev-name").value = document.getElementById("v-dev-name").textContent;
   if (id === "account-email") document.getElementById("in-acct-email").value = state.email;
-  if (id === "delete") {
-    document.getElementById("dc").checked = false;
-    document.getElementById("db").disabled = true;
-  }
-
   updateInspector();
 }
 
@@ -1883,7 +2200,7 @@ function applyScenario(name) {
   state.showExtras = true;
   state.unsynced = 0;
   state.scheduleOn = true;
-  state.medical = { htn: true, diabetes: false };
+  state.medical = { htn: true, diabetes: false, chol: false };
 
   switch (name) {
     case "ready": go("profile"); break;
@@ -1928,11 +2245,40 @@ document.body.addEventListener("click", e => {
   if (act) {
     const a = act.dataset.action;
     if (a === "toast") toast(act.dataset.toast || "Demo");
-    if (a === "pair-demo") {
+    if (a === "pair-start") {
+      const t = act.dataset.pairType || "bp";
+      state.pairType = t;
+      const models = {
+        bp: { name: "HEM-7156", sub: "Blood pressure monitor", art: "bp" },
+        scale: { name: "HN-300T2", sub: "Body composition scale", art: "scale" },
+        ecg: { name: "ECG Monitor", sub: "Heart rhythm recording", art: "bp" },
+      };
+      const m = models[t] || models.bp;
+      state.pairModel = m.name;
+      document.getElementById("pair-scan-title").textContent = `Looking for ${m.sub.toLowerCase()}`;
+      document.getElementById("pair-found-name").textContent = m.name;
+      document.getElementById("pair-found-sub").textContent = m.sub;
+      const art = document.getElementById("pair-found-art");
+      art.className = "device-art " + m.art;
+      art.innerHTML = m.art === "scale"
+        ? '<div class="plate"></div>'
+        : '<div class="cuff"></div><div class="display">OK</div>';
+      go("pair-scan");
+      clearTimeout(window._pairT);
+      window._pairT = setTimeout(() => go("pair-found"), 1600);
+    }
+    if (a === "pair-confirm") {
+      if (state.deviceCount < 2) state.deviceCount += 1;
       state.deviceCount = Math.max(1, state.deviceCount);
-      state.showExtras = true;
-      toast("Device paired");
+      if (state.pairType === "ecg") state.showExtras = true;
+      state.showExtras = state.deviceCount > 0 && (state.showExtras || state.pairType === "ecg" || state.deviceCount >= 1);
+      if (state.deviceCount > 0) state.showExtras = true;
+      document.getElementById("pair-success-msg").textContent =
+        `${state.pairModel} is ready. Take a reading when you can.`;
       syncRoot();
+      go("pair-success");
+    }
+    if (a === "pair-done") {
       go("devices");
     }
     if (a === "confirm-remove") {
@@ -1953,21 +2299,55 @@ document.body.addEventListener("click", e => {
   if (key === "stride") {
     const auto = document.querySelector('#stride-chips button.on')?.dataset.stride === "Auto";
     state.you.stride = auto ? "Auto" : (document.getElementById("in-stride").value.trim() || "72 cm");
+  } else if (key === "dob") {
+    const d = document.getElementById("dob-day").value;
+    const mo = document.getElementById("dob-month").value;
+    const y = document.getElementById("dob-year").value;
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const mi = months.indexOf(mo);
+    const dt = new Date(Number(y), mi, Number(d));
+    const err = document.getElementById("dob-error");
+    if (!d || mi < 0 || !y || dt.getFullYear() != Number(y) || dt.getMonth() != mi || dt.getDate() != Number(d) || dt > new Date()) {
+      err.classList.add("show");
+      return;
+    }
+    err.classList.remove("show");
+    state.you.dob = `${Number(d)} ${mo} ${y}`;
   } else if (key === "bpGoal") {
-    const sys = document.getElementById("in-bp-sys").value.trim();
-    const dia = document.getElementById("in-bp-dia").value.trim();
-    state.you.bpGoal = (sys && dia) ? `${sys} / ${dia}` : "Not set";
+    const sys = Number(document.getElementById("in-bp-sys").value.trim());
+    const dia = Number(document.getElementById("in-bp-dia").value.trim());
+    const err = document.getElementById("bp-error");
+    if (!sys || !dia || sys < 80 || sys > 200 || dia < 40 || dia > 130 || dia >= sys) {
+      err.classList.add("show");
+      return;
+    }
+    err.classList.remove("show");
+    state.you.bpGoal = `${sys} / ${dia}`;
   } else if (key === "height") {
-    const raw = document.getElementById("in-height").value.trim();
-    if (!raw) state.you.height = "Not set";
-    else state.you.height = /cm|ft|in/i.test(raw) ? raw : `${raw} cm`;
+    const unit = document.querySelector('#height-unit button.on')?.dataset.hunit || "cm";
+    if (unit === "ft") {
+      const ft = Number(document.getElementById("in-height-ft").value.trim());
+      const inch = Number(document.getElementById("in-height-in").value.trim() || 0);
+      if (!ft) state.you.height = "Not set";
+      else state.you.height = `${Math.round((ft * 12 + inch) * 2.54)} cm`;
+    } else {
+      const raw = document.getElementById("in-height").value.trim();
+      if (!raw) state.you.height = "Not set";
+      else state.you.height = /cm|ft|in/i.test(raw) ? raw : `${raw} cm`;
+    }
   } else if (key === "sleepGoal") {
-    const raw = document.getElementById("in-sleepGoal").value.trim();
-    state.you.sleepGoal = raw ? (raw.includes("h") ? raw : `${raw} h`) : "Not set";
+    state.you.sleepGoal = `${state.sleepHours} h`;
+  } else if (key === "weightGoal") {
+    const raw = document.getElementById("in-weightGoal").value.trim();
+    if (!raw) state.you.weightGoal = "Not set";
+    else state.you.weightGoal = /kg|lb/i.test(raw) ? raw : `${raw} ${state.units.weight}`;
+  } else if (key === "weight") {
+    const raw = document.getElementById("in-weight").value.trim();
+    if (!raw) state.you.weight = "Not set";
+    else state.you.weight = /kg|lb/i.test(raw) ? raw : `${raw} ${state.units.weight}`;
   } else {
     const inputMap = {
-      name: "in-name", dob: "in-dob", weight: "in-weight",
-      weightGoal: "in-weightGoal", stepsGoal: "in-stepsGoal",
+      name: "in-name", stepsGoal: "in-stepsGoal",
     };
     const el = document.getElementById(inputMap[key]);
     const val = el ? el.value.trim() : "";
@@ -2033,9 +2413,7 @@ document.getElementById("cloud-sheet").addEventListener("click", e => {
   if (e.target.id === "cloud-sheet") document.getElementById("cloud-off-cancel").click();
 });
 
-document.getElementById("dc").addEventListener("change", function () {
-  document.getElementById("db").disabled = !this.checked;
-});
+// delete checkbox handled below with email confirm
 
 document.getElementById("t-sched").addEventListener("click", function () {
   state.scheduleOn = !state.scheduleOn;

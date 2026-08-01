@@ -16,6 +16,9 @@ Same information architecture and S0–S9 scenarios — elevated craft on **ever
 | Account | Clear cloud / sign-in / danger hierarchy; polished sheets |
 | Settings / Help | FAQ cards, video row, Premium plan card, About mark |
 | Support (P-53) | Care hierarchy: call/email + hours, self-serve, privacy, feedback, emergency line |
+| Pairing | Type → scan → found → success (P-23a–c) |
+| Editors | DOB pickers, BP validation/presets, sleep stepper, steps presets, height ft/in |
+| Scale / AFib / ECG / Legal | Scale parity, AFib history list, ECG toggles, legal scroll chrome |
 | System | Screen transitions, toast with check, 8pt grid, larger type on fields |
 
 ## Scenarios (S0–S9)
