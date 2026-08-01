@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Measurement schedule — JTBD prototype</title>
+  <style>
+    :root {
+      --bg: #f2f4f7; --surface: #fff; --ink: #111827; --muted: #6b7280;
+      --line: #e5e7eb; --blue: #0077c8; --blue-soft: #e8f4fc; --green: #0f766e;
+      --green-soft: #d1fae5; --amber-soft: #fef3c7; --amber: #b45309;
+      --radius: 14px; --safe-top: 54px; --safe-bottom: 28px; --tab-h: 52px; --nav-h: 48px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(900px 500px at 10% 0%, #dbeafe, transparent 50%), #0f172a;
+      color: var(--ink); display: flex; flex-direction: column; align-items: center; padding: 24px 16px 40px; gap: 16px;
+    }
+    .chrome { text-align: center; color: #e2e8f0; max-width: 480px; }
+    .chrome h1 { margin: 0 0 6px; font-size: 20px; }
+    .chrome p { margin: 0; font-size: 13px; color: #94a3b8; line-height: 1.45; }
+    .phone {
+      width: 390px; height: 844px; background: #000; border-radius: 44px; padding: 12px;
+      box-shadow: 0 8px 28px rgba(0,0,0,.35); position: relative;
+    }
+    .screen-wrap {
+      width: 100%; height: 100%; background: var(--bg); border-radius: 34px; overflow: hidden; position: relative;
+    }
+    .notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 120px; height: 28px; background: #000; border-radius: 20px; z-index: 20; }
+    .status { position: absolute; top: 14px; left: 24px; right: 24px; font-size: 14px; font-weight: 600; z-index: 15; display: flex; justify-content: space-between; pointer-events: none; }
+    .app { position: absolute; inset: 0; padding-top: var(--safe-top); padding-bottom: calc(var(--safe-bottom) + var(--tab-h)); display: flex; flex-direction: column; }
+    .app.no-tab { padding-bottom: var(--safe-bottom); }
+    .screen { display: none; flex: 1; flex-direction: column; min-height: 0; animation: fade .15s ease; }
+    .screen.on { display: flex; }
+    @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .nav { height: var(--nav-h); display: flex; align-items: center; justify-content: space-between; padding: 0 8px; position: relative; flex-shrink: 0; }
+    .nav button { border: 0; background: 0; color: var(--blue); font-size: 16px; padding: 10px; cursor: pointer; font-family: inherit; }
+    .nav .title { position: absolute; left: 50%; transform: translateX(-50%); font-weight: 650; font-size: 17px; }
+    .content { flex: 1; overflow-y: auto; padding: 4px 16px 20px; }
+    .content.pad { padding-bottom: 100px; }
+    .hero h2 { margin: 4px 0 6px; font-size: 28px; letter-spacing: -.03em; }
+    .hero p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+    .cta {
+      display: flex; gap: 14px; align-items: center; padding: 18px 16px;
+      background: linear-gradient(135deg, #0077c8, #0ea5e9); color: #fff; border: 0; width: 100%;
+      text-align: left; cursor: pointer; font-family: inherit;
+    }
+    .cta .ic { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,.2); display: grid; place-items: center; font-size: 22px; flex-shrink: 0; }
+    .cta h3 { margin: 0 0 2px; font-size: 18px; }
+    .cta p { margin: 0; font-size: 13px; opacity: .9; }
+    .row {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px; width: 100%; border: 0;
+      background: #fff; text-align: left; cursor: pointer; font: inherit; color: inherit;
+    }
+    .row + .row { border-top: 1px solid var(--line); }
+    .row .meta { flex: 1; min-width: 0; }
+    .row strong { display: block; font-size: 16px; }
+    .row span { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .chev { color: #9ca3af; }
+    .label { font-size: 12px; font-weight: 650; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 16px 4px 8px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 8px 14px;
+      font-size: 14px; font-weight: 550; cursor: pointer; font-family: inherit;
+    }
+    .chip.on { background: var(--blue-soft); border-color: #93c5fd; color: #005fa0; }
+    .chip.day { width: 40px; height: 40px; padding: 0; display: grid; place-items: center; border-radius: 50%; }
+    .footer {
+      position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(var(--safe-bottom) + 8px);
+      background: linear-gradient(to top, rgba(242,244,247,.98) 70%, transparent);
+    }
+    .app:not(.no-tab) .footer { bottom: calc(var(--tab-h)); padding-bottom: 12px; }
+    .btn {
+      width: 100%; border: 0; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 650;
+      background: var(--blue); color: #fff; cursor: pointer; font-family: inherit;
+    }
+    .btn:disabled { background: #94a3b8; }
+    .btn.sec { background: #fff; color: var(--blue); border: 1px solid var(--line); margin-top: 8px; }
+    .pill { display: inline-flex; border-radius: 999px; padding: 3px 8px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+    .pill.on { background: var(--green-soft); color: var(--green); }
+    .pill.off { background: #e5e7eb; color: #374151; }
+    .pill.due { background: var(--amber-soft); color: var(--amber); }
+    .toggle {
+      width: 48px; height: 30px; border-radius: 999px; border: 0; background: #cbd5e1; position: relative; cursor: pointer; flex-shrink: 0;
+    }
+    .toggle.on { background: #34c759; }
+    .toggle::after {
+      content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+      background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .15s;
+    }
+    .toggle.on::after { transform: translateX(18px); }
+    .hint { font-size: 13px; color: var(--muted); line-height: 1.4; margin: 8px 4px 0; }
+    .alert { background: var(--blue-soft); color: #005fa0; border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.4; margin-bottom: 12px; }
+    .alert.warn { background: var(--amber-soft); color: var(--amber); }
+    .success { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+    .success .big { width: 72px; height: 72px; border-radius: 50%; background: var(--green-soft); color: var(--green); display: grid; place-items: center; font-size: 34px; margin-bottom: 16px; }
+    .success h2 { margin: 0 0 8px; font-size: 26px; }
+    .success p { margin: 0; color: var(--muted); font-size: 15px; max-width: 280px; line-height: 1.45; }
+    .tabbar {
+      position: absolute; left: 0; right: 0; bottom: 0; height: calc(var(--tab-h) + var(--safe-bottom));
+      padding: 6px 4px var(--safe-bottom); background: rgba(255,255,255,.94); border-top: 1px solid var(--line);
+      display: flex; z-index: 20;
+    }
+    .app.no-tab .tabbar { display: none; }
+    .tabbar button {
+      flex: 1; border: 0; background: 0; color: #9ca3af; font-size: 10px; font-weight: 600;
+      display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; font-family: inherit; padding-top: 2px;
+    }
+    .tabbar button.on { color: var(--blue); }
+    .tabbar .ic { font-size: 20px; height: 24px; }
+    .time-row {
+      display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
+    }
+    .time-row + .time-row { border-top: 1px solid var(--line); }
+    .device-card {
+      padding: 16px; display: flex; gap: 12px; align-items: center;
+    }
+    .device-ic {
+      width: 48px; height: 48px; border-radius: 12px; background: var(--blue-soft); color: var(--blue);
+      display: grid; place-items: center; font-size: 22px; flex-shrink: 0;
+    }
+    .launcher {
+      width: min(360px, 100%); background: rgba(15,23,42,.55); border: 1px solid rgba(148,163,184,.25);
+      border-radius: 16px; padding: 14px; color: #e2e8f0;
+    }
+    .launcher h3 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; }
+    .launcher button {
+      width: 100%; text-align: left; border: 1px solid rgba(148,163,184,.3); background: rgba(30,41,59,.8);
+      color: #f1f5f9; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; font: inherit; font-size: 13px;
+    }
+    .launcher strong { display: block; font-size: 14px; margin-bottom: 2px; }
+    .launcher span { color: #94a3b8; font-size: 12px; }
+    .cut { opacity: .45; pointer-events: none; }
+    .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #e5e7eb; padding: 4px; border-radius: 12px; }
+    .seg button {
+      border: 0; background: transparent; border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 600;
+      color: var(--muted); cursor: pointer; font-family: inherit;
+    }
+    .seg button.on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  </style>
+</head>
+<body>
+  <div class="chrome">
+    <h1>Measurement schedule — JTBD prototype</h1>
+    <p>Companion measure schedule on <strong>Devices</strong>. Tab bar: Home · Devices · Share · Profile. Prompts are system notifications only — never a tab.</p>
+  </div>
+
+  <div class="phone">
+    <div class="screen-wrap">
+      <div class="notch"></div>
+      <div class="status"><span>9:41</span><span>■■■</span></div>
+      <div class="app" id="app">
+
+        <!-- HOME -->
+        <section class="screen on" id="s-home">
+          <div class="nav"><span></span><div class="title">Home</div><span></span></div>
+          <div class="content">
+            <div class="hero">
+              <h2>Today</h2>
+              <p>Device-first home. Measure schedule lives with devices — not a health calendar tab.</p>
+            </div>
+            <div class="card">
+              <div class="device-card">
+                <div class="device-ic">♥</div>
+                <div class="meta" style="flex:1">
+                  <strong style="display:block">BP Monitor</strong>
+                  <span style="color:var(--muted);font-size:13px">Last reading · Yesterday 8:12</span>
+                </div>
+                <span class="pill due">Due</span>
+              </div>
+            </div>
+            <div class="alert warn">No blood pressure reading today. Measure when you’re ready — or set a gentle schedule.</div>
+            <div class="card">
+              <button class="row" data-go="device">
+                <div class="meta"><strong>Set measure schedule</strong><span>For this BP monitor</span></div>
+                <span class="chev">›</span>
+              </button>
+            </div>
+            <div class="card cut">
+              <div class="row"><div class="meta"><strong>Medications</strong><span>Out of companion core → dedicated / OS</span></div></div>
+              <div class="row"><div class="meta"><strong>Doctor appointments</strong><span>Use Calendar</span></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- DEVICES TAB -->
+        <section class="screen" id="s-devices">
+          <div class="nav"><span></span><div class="title">Devices</div><span></span></div>
+          <div class="content">
+            <div class="hero"><h2>Your devices</h2><p>Cadence is a property of a paired device.</p></div>
+            <div class="card">
+              <button class="row" data-go="device">
+                <div class="device-ic" style="width:40px;height:40px;font-size:18px">♥</div>
+                <div class="meta"><strong>BP Monitor HEM-7156</strong><span>Schedule on · Daily 8:00 AM</span></div>
+                <span class="chev">›</span>
+              </button>
+              <button class="row" data-go="device-scale">
+                <div class="device-ic" style="width:40px;height:40px;font-size:18px;background:#ede9fe;color:#6d28d9">⚖</div>
+                <div class="meta"><strong>Body scale</strong><span>No schedule</span></div>
+                <span class="chev">›</span>
+              </button>
+            </div>
+            <p class="hint">No schedule types for unpaired vitals (oxygen, temp without device).</p>
+          </div>
+        </section>
+
+        <!-- DEVICE DETAIL BP -->
+        <section class="screen" id="s-device">
+          <div class="nav"><button data-go="devices">‹ Devices</button><div class="title">BP Monitor</div><span style="width:64px"></span></div>
+          <div class="content pad">
+            <div class="card">
+              <div class="device-card">
+                <div class="device-ic">♥</div>
+                <div>
+                  <strong style="display:block;font-size:17px">HEM-7156</strong>
+                  <span style="color:var(--muted);font-size:13px">Connected · Battery OK</span>
+                </div>
+              </div>
+            </div>
+            <div class="label">Measure schedule</div>
+            <div class="card">
+              <div class="row" style="cursor:default">
+                <div class="meta"><strong>Remind me to measure</strong><span>Only if no reading yet today</span></div>
+                <button class="toggle on" id="t-bp" type="button" aria-label="Enable"></button>
+              </div>
+              <button class="row" data-go="edit">
+                <div class="meta"><strong>When</strong><span id="bp-when">Every day · 8:00 AM</span></div>
+                <span class="chev">›</span>
+              </button>
+            </div>
+            <div class="alert">Next prompt: Tomorrow 8:00 AM — skipped if you already measured.</div>
+            <div class="label">Not included</div>
+            <div class="card cut">
+              <div class="row"><div class="meta"><strong>Medication</strong><span>Removed from this surface</span></div></div>
+              <div class="row"><div class="meta"><strong>Medical appointment</strong><span>Removed</span></div></div>
+              <div class="row"><div class="meta"><strong>General reminder</strong><span>Removed</span></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- DEVICE SCALE -->
+        <section class="screen" id="s-device-scale">
+          <div class="nav"><button data-go="devices">‹ Devices</button><div class="title">Body scale</div><span style="width:64px"></span></div>
+          <div class="content pad">
+            <div class="card">
+              <div class="row" style="cursor:default">
+                <div class="meta"><strong>Remind me to measure</strong><span>Weekly by default for weight</span></div>
+                <button class="toggle" id="t-scale" type="button"></button>
+              </div>
+              <button class="row" data-go="edit-scale">
+                <div class="meta"><strong>When</strong><span>Off</span></div>
+                <span class="chev">›</span>
+              </button>
+            </div>
+            <p class="hint">After first transfer, offer one-tap “Weekly morning weight?”</p>
+          </div>
+        </section>
+
+        <!-- EDIT SCHEDULE -->
+        <section class="screen" id="s-edit">
+          <div class="nav"><button data-go="device">‹ Back</button><div class="title">When</div><span style="width:64px"></span></div>
+          <div class="content pad">
+            <div class="label">Days</div>
+            <div class="chips" id="days">
+              <button type="button" class="chip day on" data-d="0">S</button>
+              <button type="button" class="chip day on" data-d="1">M</button>
+              <button type="button" class="chip day on" data-d="2">T</button>
+              <button type="button" class="chip day on" data-d="3">W</button>
+              <button type="button" class="chip day on" data-d="4">T</button>
+              <button type="button" class="chip day on" data-d="5">F</button>
+              <button type="button" class="chip day on" data-d="6">S</button>
+            </div>
+            <p class="hint">Default: every day (not Monday-only).</p>
+
+            <div class="label">Times</div>
+            <div class="card" id="times">
+              <div class="time-row">
+                <strong>Morning</strong>
+                <span style="color:var(--blue);font-weight:600">8:00 AM</span>
+              </div>
+            </div>
+            <button class="btn sec" type="button" id="add-time" style="margin-top:8px">+ Add second time</button>
+            <p class="hint">Max 2 times/day for BP (AM/PM clinical habit). No “frequency = 10” spinner.</p>
+
+            <div class="label">Smart skip</div>
+            <div class="card">
+              <div class="row" style="cursor:default">
+                <div class="meta"><strong>Skip if already measured</strong><span>No prompt when a reading exists for this window</span></div>
+                <button class="toggle on" id="t-skip" type="button"></button>
+              </div>
+            </div>
+          </div>
+          <div class="footer">
+            <button class="btn" data-go="device" id="save-sched">Save</button>
+          </div>
+        </section>
+
+        <!-- NOTIFICATION MOCK -->
+        <section class="screen" id="s-notif">
+          <div class="nav"><button data-go="home">Close</button><div class="title">Notification</div><span style="width:64px"></span></div>
+          <div class="content">
+            <div class="hero"><h2>Prompt moment</h2><p>Notification = start of work, not end of work.</p></div>
+            <div class="card" style="padding:16px">
+              <div style="font-size:12px;color:var(--muted);font-weight:650;margin-bottom:8px">OMRON Connect</div>
+              <strong style="display:block;font-size:17px;margin-bottom:4px">Blood pressure</strong>
+              <span style="color:var(--muted);font-size:14px;line-height:1.4">Time to measure with your monitor. Open to transfer a reading.</span>
+              <div style="display:flex;gap:8px;margin-top:14px">
+                <button class="btn" style="padding:10px" data-go="measure">Measure</button>
+                <button class="btn sec" style="padding:10px;margin:0" data-action="snooze">Snooze 1h</button>
+                <button class="btn sec" style="padding:10px;margin:0" data-action="skip">Skip today</button>
+              </div>
+            </div>
+            <p class="hint">Title never empty. Actions: Measure · Snooze · Skip. Auto-resolves when a reading lands.</p>
+          </div>
+        </section>
+
+        <!-- MEASURE / TRANSFER -->
+        <section class="screen" id="s-measure">
+          <div class="nav"><button data-go="home">‹ Home</button><div class="title">Measure</div><span style="width:64px"></span></div>
+          <div class="content pad">
+            <div class="hero"><h2>Take a reading</h2><p>Closed loop from the prompt.</p></div>
+            <div class="card" style="padding:24px;text-align:center">
+              <div style="font-size:48px;margin-bottom:8px">♥</div>
+              <strong>Connect BP Monitor</strong>
+              <p class="hint">Transfer when ready</p>
+            </div>
+            <button class="btn" data-go="success">Simulate reading received</button>
+          </div>
+        </section>
+
+        <!-- SUCCESS -->
+        <section class="screen" id="s-success">
+          <div class="nav"><span></span><div class="title"></div><span></span></div>
+          <div class="success">
+            <div class="big">✓</div>
+            <h2>Reading saved</h2>
+            <p>132 / 84 · Prompt for today is cleared. No more nudges until the next scheduled window.</p>
+          </div>
+          <div class="footer">
+            <button class="btn" data-go="home">Done</button>
+          </div>
+        </section>
+
+        <!-- SHARE TAB STUB — already owned by Share consolidation; not for prompts -->
+        <section class="screen" id="s-share-stub">
+          <div class="nav"><span></span><div class="title">Share</div><span></span></div>
+          <div class="content">
+            <div class="hero">
+              <h2>Share readings</h2>
+              <p>Separate product job (export / email). Not measurement prompts.</p>
+            </div>
+            <div class="alert">Tab bar: Home · Devices · <strong>Share</strong> · Profile. Prompts are system notifications — never a tab.</div>
+            <p class="hint">See share-readings prototype for the full Share flow.</p>
+          </div>
+        </section>
+
+        <!-- PROFILE — old reminders gone -->
+        <section class="screen" id="s-profile">
+          <div class="nav"><span></span><div class="title">Profile</div><span></span></div>
+          <div class="content">
+            <div class="hero"><h2>Roy</h2><p>No generic “Reminders” catalog here.</p></div>
+            <div class="card">
+              <button class="row" data-go="devices">
+                <div class="meta"><strong>Devices & measure schedules</strong><span>Per paired device</span></div>
+                <span class="chev">›</span>
+              </button>
+            </div>
+            <div class="card cut">
+              <div class="row"><div class="meta"><strong>My Reminders tab</strong><span>Removed as peer health OS</span></div></div>
+              <div class="row"><div class="meta"><strong>Prompt / notification tab</strong><span>Never — system notification only</span></div></div>
+              <div class="row"><div class="meta"><strong>Voltron dual engine</strong><span>Killed — one scheduler</span></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CUT LIST (education) -->
+        <section class="screen" id="s-cut">
+          <div class="nav"><button data-go="home">‹ Back</button><div class="title">What we cut</div><span style="width:64px"></span></div>
+          <div class="content">
+            <div class="label">Fails companion filter</div>
+            <div class="card">
+              <div class="row" style="cursor:default"><div class="meta"><strong>Medication reminders</strong><span>Phone OS / med apps win</span></div></div>
+              <div class="row" style="cursor:default"><div class="meta"><strong>Medical appointments</strong><span>Calendar job</span></div></div>
+              <div class="row" style="cursor:default"><div class="meta"><strong>General reminder</strong><span>No device in the loop</span></div></div>
+            </div>
+            <div class="label">Keep (reframed)</div>
+            <div class="card">
+              <div class="row" style="cursor:default"><div class="meta"><strong>BP / weight / device measure cadence</strong><span>Paired hardware only</span></div></div>
+              <div class="row" style="cursor:default"><div class="meta"><strong>Smart skip + measure deep link</strong><span>Outcome = reading</span></div></div>
+            </div>
+          </div>
+        </section>
+
+        <nav class="tabbar" id="tabbar">
+          <button type="button" class="on" data-go="home"><span class="ic">⌂</span>Home</button>
+          <button type="button" data-go="devices"><span class="ic">▣</span>Devices</button>
+          <button type="button" data-go="share-stub"><span class="ic">↗</span>Share</button>
+          <button type="button" data-go="profile"><span class="ic">☺</span>Profile</button>
+        </nav>
+      </div>
+    </div>
+  </div>
+
+  <aside class="launcher">
+    <h3>Jump to</h3>
+    <button data-go="home"><strong>Home + due</strong><span>Overdue context (no Prompt tab)</span></button>
+    <button data-go="device"><strong>Device schedule</strong><span>On/off + when</span></button>
+    <button data-go="edit"><strong>Editor</strong><span>Days · max 2 times · smart skip</span></button>
+    <button data-go="notif"><strong>System notification (demo)</strong><span>Not in tab bar · Measure · Snooze · Skip</span></button>
+    <button data-go="share-stub"><strong>Share tab</strong><span>Already reserved — export job</span></button>
+    <button data-go="cut"><strong>Keep / cut</strong><span>Companion filter</span></button>
+  </aside>
+
+  <script>
+    const tabs = new Set(["home", "devices", "share-stub", "profile"]);
+    const nested = new Set(["edit", "device", "device-scale", "measure", "success", "cut", "notif"]);
+    const map = {
+      home: "s-home", devices: "s-devices", device: "s-device", "device-scale": "s-device-scale",
+      edit: "s-edit", "edit-scale": "s-edit", notif: "s-notif", measure: "s-measure",
+      success: "s-success", profile: "s-profile", cut: "s-cut", "share-stub": "s-share-stub",
+    };
+    let secondTime = false;
+
+    function go(id) {
+      document.querySelectorAll(".screen").forEach((s) => s.classList.remove("on"));
+      const el = document.getElementById(map[id] || "s-home");
+      if (el) el.classList.add("on");
+      const app = document.getElementById("app");
+      // Tab bar only on main tabs. Prompt/notification is never a tab — nested demo only.
+      app.classList.toggle("no-tab", nested.has(id));
+      document.querySelectorAll("#tabbar button").forEach((b) => {
+        const on =
+          b.dataset.go === id ||
+          (id === "device" && b.dataset.go === "devices") ||
+          (id === "device-scale" && b.dataset.go === "devices");
+        b.classList.toggle("on", on);
+      });
+    }
+
+    document.body.addEventListener("click", (e) => {
+      const g = e.target.closest("[data-go]");
+      if (g) { e.preventDefault(); go(g.dataset.go); return; }
+      const a = e.target.closest("[data-action]");
+      if (!a) return;
+      if (a.dataset.action === "snooze") alert("Snoozed 1 hour (demo)");
+      if (a.dataset.action === "skip") alert("Skipped today (demo)");
+    });
+
+    document.getElementById("t-bp").addEventListener("click", function () { this.classList.toggle("on"); });
+    document.getElementById("t-scale").addEventListener("click", function () { this.classList.toggle("on"); });
+    document.getElementById("t-skip").addEventListener("click", function () { this.classList.toggle("on"); });
+
+    document.getElementById("days").addEventListener("click", (e) => {
+      const c = e.target.closest(".chip");
+      if (c) c.classList.toggle("on");
+    });
+
+    document.getElementById("add-time").addEventListener("click", function () {
+      if (secondTime) return;
+      secondTime = true;
+      document.getElementById("times").insertAdjacentHTML("beforeend",
+        `<div class="time-row"><strong>Evening</strong><span style="color:var(--blue);font-weight:600">8:00 PM</span></div>`);
+      document.getElementById("bp-when").textContent = "Every day · 8:00 AM, 8:00 PM";
+      this.disabled = true;
+      this.textContent = "Max 2 times";
+    });
+  </script>
+</body>
+</html>

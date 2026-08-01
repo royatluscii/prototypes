@@ -1,0 +1,2060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Share Readings — Clickable Prototype</title>
+  <style>
+    :root {
+      --bg: #f2f4f7;
+      --surface: #ffffff;
+      --ink: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --blue: #0077c8;
+      --blue-dark: #005fa0;
+      --blue-soft: #e8f4fc;
+      --green: #0f766e;
+      --green-soft: #d1fae5;
+      --amber: #b45309;
+      --amber-soft: #fef3c7;
+      --red: #b91c1c;
+      --red-soft: #fee2e2;
+      --radius: 14px;
+      --shadow: 0 8px 28px rgba(15, 23, 42, 0.12);
+      --phone-w: 390px;
+      --phone-h: 844px;
+      --safe-top: 54px;
+      --safe-bottom: 28px;
+      --nav-h: 48px;
+      --tab-h: 52px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, #dbeafe 0%, transparent 50%),
+        radial-gradient(900px 500px at 100% 0%, #e0f2fe 0%, transparent 45%),
+        #0f172a;
+      color: var(--ink);
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 24px 16px 40px;
+    }
+
+    .chrome-title {
+      text-align: center;
+      color: #e2e8f0;
+      max-width: 520px;
+    }
+    .chrome-title h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+    .chrome-title p {
+      margin: 0;
+      font-size: 14px;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+    .chrome-title .badge-line {
+      margin-top: 8px;
+      display: inline-flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .chrome-title .badge-line span {
+      background: rgba(56, 189, 248, 0.15);
+      color: #7dd3fc;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .stage {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .phone {
+      width: var(--phone-w);
+      height: var(--phone-h);
+      background: #000;
+      border-radius: 44px;
+      padding: 12px;
+      box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,0.08);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      border-radius: 34px;
+      overflow: hidden;
+      position: relative;
+    }
+    .status-bar {
+      height: var(--safe-top);
+      padding: 14px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 14px;
+      font-weight: 600;
+      position: absolute;
+      inset: 0 0 auto 0;
+      z-index: 20;
+      pointer-events: none;
+    }
+    .status-bar .time { margin-left: 8px; }
+    .status-bar .icons { display: flex; gap: 6px; align-items: center; }
+    .notch {
+      position: absolute;
+      top: 10px; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 28px;
+      background: #000; border-radius: 20px; z-index: 25;
+    }
+    .home-indicator {
+      position: absolute;
+      bottom: 8px; left: 50%; transform: translateX(-50%);
+      width: 128px; height: 5px;
+      background: #111; border-radius: 99px; opacity: 0.35; z-index: 20;
+    }
+
+    .app {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+      padding-bottom: var(--safe-bottom);
+    }
+    .app.has-tabbar {
+      padding-bottom: calc(var(--safe-bottom) + var(--tab-h));
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      animation: fadeIn 0.18s ease;
+    }
+    .screen.active { display: flex; }
+
+    .tabbar {
+      position: absolute;
+      left: 0; right: 0;
+      bottom: 0;
+      height: calc(var(--tab-h) + var(--safe-bottom));
+      padding: 6px 4px var(--safe-bottom);
+      background: rgba(255, 255, 255, 0.94);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: none;
+      z-index: 30;
+    }
+    .app.has-tabbar .tabbar { display: flex; }
+    .tabbar button {
+      flex: 1;
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: #9ca3af;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 2px;
+      padding: 2px 0 0;
+      cursor: pointer;
+      min-width: 0;
+    }
+    .tabbar button .tab-icon {
+      font-size: 20px;
+      line-height: 1.2;
+      height: 24px;
+      display: grid;
+      place-items: center;
+    }
+    .tabbar button.active {
+      color: var(--blue);
+    }
+    .tabbar button:active { opacity: 0.7; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    .nav {
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px 0 4px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    .nav-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--blue);
+      font-size: 16px;
+      font-weight: 500;
+      padding: 10px 12px;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+    .nav-btn:active { opacity: 0.6; }
+    .nav-btn.ghost { color: var(--muted); }
+    .nav-title {
+      font-size: 17px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    .nav-spacer { width: 64px; }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 4px 16px 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .content.padded-bottom { padding-bottom: 100px; }
+
+    .hero {
+      margin: 4px 0 16px;
+    }
+    .hero h2 {
+      margin: 0 0 6px;
+      font-size: 28px;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .card.interactive {
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .card.interactive:active {
+      transform: scale(0.985);
+    }
+    .card-cta {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 18px 16px;
+      background: linear-gradient(135deg, #0077c8, #0ea5e9);
+      color: #fff;
+      border: 0;
+    }
+    .card-cta .icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.18);
+      display: grid; place-items: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .card-cta h3 {
+      margin: 0 0 2px;
+      font-size: 18px;
+      font-weight: 650;
+    }
+    .card-cta p {
+      margin: 0;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+    .card-cta .chev { margin-left: auto; font-size: 20px; opacity: 0.85; }
+
+    .job-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .job-card {
+      appearance: none;
+      width: 100%;
+      border: 1.5px solid var(--line);
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 18px 16px;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    }
+    .job-card:active { transform: scale(0.985); }
+    .job-card:hover { border-color: #93c5fd; }
+    .job-card .job-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .job-card.email .job-icon {
+      background: #ede9fe;
+      color: #6d28d9;
+    }
+    .job-card .job-body { flex: 1; min-width: 0; }
+    .job-card strong {
+      display: block;
+      font-size: 17px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+    .job-card span {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .job-card .job-chev {
+      color: #9ca3af;
+      font-size: 20px;
+      align-self: center;
+    }
+    .package-summary-chip {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .package-summary-chip strong {
+      display: block;
+      color: var(--ink);
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .list-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 0;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
+    }
+    .list-row + .list-row { border-top: 1px solid var(--line); }
+    .list-row:active { background: #f8fafc; }
+    .list-row .meta { flex: 1; min-width: 0; }
+    .list-row .meta strong {
+      display: block;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .list-row .meta span {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .list-row .chev {
+      color: #9ca3af;
+      font-size: 18px;
+    }
+    .avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      background: var(--blue-soft);
+      color: var(--blue);
+    }
+    .avatar.me { background: #ede9fe; color: #6d28d9; }
+    .avatar.sam { background: #fce7f3; color: #be185d; }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 18px 4px 8px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 550;
+      cursor: pointer;
+    }
+    .chip.active {
+      background: var(--blue-soft);
+      border-color: #93c5fd;
+      color: var(--blue-dark);
+    }
+    .chip:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .type-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .type-card {
+      appearance: none;
+      border: 1.5px solid var(--line);
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 14px 12px;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
+      min-height: 104px;
+    }
+    .type-card.active {
+      border-color: var(--blue);
+      background: var(--blue-soft);
+      box-shadow: inset 0 0 0 1px var(--blue);
+    }
+    .type-card strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .type-card span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .type-card .badge {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--blue);
+      background: rgba(255,255,255,0.7);
+      border-radius: 6px;
+      padding: 3px 6px;
+    }
+
+    .vital-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .vital-row + .vital-row { border-top: 1px solid var(--line); }
+    .vital-row.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .check {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      border: 1.5px solid #cbd5e1;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+      background: #fff;
+      color: transparent;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .vital-row.selected .check,
+    .recipient-row.selected .check {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .vital-row .count {
+      margin-left: auto;
+      font-size: 13px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .footer-bar {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 12px 16px calc(var(--safe-bottom) + 8px);
+      background: linear-gradient(to top, rgba(242,244,247,0.98) 70%, rgba(242,244,247,0));
+      z-index: 15;
+    }
+    /* Nested flows hide the tab bar; keep footer above home indicator only */
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 650;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn.primary {
+      background: var(--blue);
+      color: #fff;
+    }
+    .btn.primary:active { background: var(--blue-dark); }
+    .btn.primary:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
+    .btn.secondary {
+      background: var(--surface);
+      color: var(--blue);
+      border: 1px solid var(--line);
+      margin-top: 8px;
+    }
+    .btn.danger {
+      background: var(--red-soft);
+      color: var(--red);
+      margin-top: 8px;
+    }
+    .btn.ghost-link {
+      background: transparent;
+      color: var(--blue);
+      padding: 10px;
+      width: auto;
+    }
+
+    .context-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--blue-soft);
+      color: var(--blue-dark);
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .status-pill.active { background: var(--green-soft); color: var(--green); }
+    .status-pill.pending { background: #e5e7eb; color: #374151; }
+    .status-pill.declined { background: var(--amber-soft); color: var(--amber); }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      background: #e5e7eb;
+      padding: 4px;
+      border-radius: 12px;
+    }
+    .segmented button {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      border-radius: 10px;
+      padding: 10px 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .segmented button.active {
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .field input, .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 16px;
+      font-family: inherit;
+      background: #fff;
+    }
+    .field textarea { min-height: 72px; resize: none; }
+    .field input:focus, .field textarea:focus {
+      outline: 2px solid #93c5fd;
+      border-color: var(--blue);
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+    }
+    .toggle {
+      width: 48px; height: 30px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      position: relative;
+      border: 0;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s ease;
+    }
+    .toggle.on { background: #34c759; }
+    .toggle::after {
+      content: "";
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      transition: transform 0.15s ease;
+    }
+    .toggle.on::after { transform: translateX(18px); }
+
+    .summary-block {
+      padding: 14px 16px;
+    }
+    .summary-block h4 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    .summary-block p {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+    .summary-block p + p { margin-top: 4px; color: var(--muted); font-size: 14px; }
+
+    .success {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+    .success .check-big {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--green-soft);
+      color: var(--green);
+      display: grid; place-items: center;
+      font-size: 34px;
+      margin-bottom: 16px;
+    }
+    .success h2 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      letter-spacing: -0.02em;
+    }
+    .success p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.45;
+      max-width: 280px;
+    }
+
+    .sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      z-index: 40;
+      display: none;
+      align-items: flex-end;
+    }
+    .sheet-backdrop.show { display: flex; }
+    .sheet {
+      width: 100%;
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      padding: 12px 16px calc(var(--safe-bottom) + 16px);
+      animation: sheetUp 0.2s ease;
+    }
+    @keyframes sheetUp {
+      from { transform: translateY(30%); }
+      to { transform: none; }
+    }
+    .sheet-handle {
+      width: 40px; height: 4px;
+      background: #d1d5db;
+      border-radius: 99px;
+      margin: 0 auto 14px;
+    }
+    .sheet h3 {
+      margin: 0 0 14px;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    /* Download job — iOS-like preview + actions */
+    .share-preview {
+      background: var(--surface);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      padding: 28px 20px 22px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .share-preview .doc-icon {
+      width: 64px;
+      height: 72px;
+      margin: 0 auto 14px;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+      border: 1px solid #cbd5e1;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--blue);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      position: relative;
+    }
+    .share-preview .doc-icon::before {
+      content: "";
+      position: absolute;
+      top: 0; right: 0;
+      border-width: 0 12px 12px 0;
+      border-style: solid;
+      border-color: #94a3b8 #fff;
+    }
+    .share-preview .file-name {
+      display: block;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+      word-break: break-all;
+    }
+    .share-preview .file-meta {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .share-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .share-actions .btn.primary {
+      margin: 0;
+    }
+    .share-actions .btn.secondary {
+      margin: 0;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      color: var(--blue);
+      font-weight: 600;
+    }
+    .share-footnote {
+      margin: 16px 4px 0;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+      margin: 8px 4px 0;
+    }
+    .inline-alert {
+      background: var(--amber-soft);
+      color: var(--amber);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.4;
+      margin-top: 12px;
+    }
+    .inline-alert.blue {
+      background: var(--blue-soft);
+      color: var(--blue-dark);
+    }
+
+    .history-status {
+      font-size: 12px;
+      font-weight: 650;
+      color: var(--green);
+    }
+    .history-status.saved { color: var(--blue); }
+
+    .launcher {
+      width: min(360px, 100%);
+      background: rgba(15, 23, 42, 0.55);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 16px;
+      padding: 14px;
+      color: #e2e8f0;
+      backdrop-filter: blur(8px);
+    }
+    .launcher h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+    }
+    .launcher-grid {
+      display: grid;
+      gap: 8px;
+    }
+    .launcher button {
+      appearance: none;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(30, 41, 59, 0.8);
+      color: #f1f5f9;
+      border-radius: 10px;
+      padding: 10px 12px;
+      text-align: left;
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+    }
+    .launcher button:hover { border-color: #38bdf8; }
+    .launcher button strong { display: block; font-size: 14px; margin-bottom: 2px; }
+    .launcher button span { color: #94a3b8; font-size: 12px; }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: 88px;
+      transform: translateX(-50%) translateY(12px);
+      background: #111827;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 550;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 50;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .format-row {
+      display: flex;
+      gap: 8px;
+    }
+    .format-row .chip { flex: 1; text-align: center; }
+
+    .detail-kv {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+    }
+    .detail-kv + .detail-kv { border-top: 1px solid var(--line); }
+    .detail-kv span { color: var(--muted); }
+    .detail-kv strong { font-weight: 600; text-align: right; }
+
+    .prefill-banner {
+      background: #fff;
+      border: 1px dashed #93c5fd;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: var(--blue-dark);
+      line-height: 1.4;
+    }
+
+    @media (max-width: 860px) {
+      .page { justify-content: flex-start; padding-top: 16px; }
+      .launcher { order: 2; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="chrome-title">
+      <h1>Share Readings — clickable prototype</h1>
+      <p>JTBD flow: package → <strong style="color:#e2e8f0">Download</strong> or <strong style="color:#e2e8f0">Email someone</strong>.</p>
+      <div class="badge-line">
+        <span>Home</span>
+        <span>History</span>
+        <span>Share ←</span>
+        <span>Profile</span>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="phone" aria-label="iPhone prototype">
+        <div class="phone-screen">
+          <div class="notch"></div>
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <span class="icons">■■■ ▮</span>
+          </div>
+
+          <div class="app has-tabbar" id="app">
+
+            <!-- DASHBOARD (tab) -->
+            <section class="screen" id="screen-dashboard" data-title="Dashboard" data-tab="dashboard">
+              <div class="nav">
+                <span class="nav-spacer"></span>
+                <div class="nav-title">Dashboard</div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="content">
+                <div class="hero">
+                  <h2>Today</h2>
+                  <p>Companion home — readings and devices live here. Share is a tab, not buried in Profile.</p>
+                </div>
+                <div class="card">
+                  <div class="list-row">
+                    <div class="meta"><strong>Blood pressure</strong><span>132 / 84 · 8:12 AM</span></div>
+                    <span class="chev">›</span>
+                  </div>
+                  <div class="list-row">
+                    <div class="meta"><strong>Weight</strong><span>78.4 kg · Yesterday</span></div>
+                    <span class="chev">›</span>
+                  </div>
+                </div>
+                <div class="card interactive" data-go="share-root">
+                  <div class="list-row">
+                    <div class="avatar">↗</div>
+                    <div class="meta">
+                      <strong>Need to share readings?</strong>
+                      <span>Open the Share tab</span>
+                    </div>
+                    <span class="chev">›</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- PROFILE (tab) -->
+            <section class="screen" id="screen-profile" data-title="Profile" data-tab="profile">
+              <div class="nav">
+                <span class="nav-spacer"></span>
+                <div class="nav-title">Profile</div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="content">
+                <div class="hero">
+                  <h2>Roy</h2>
+                  <p>Share is not here — it’s a main tab.</p>
+                </div>
+                <div class="card">
+                  <div class="list-row" style="opacity:0.45; pointer-events:none;">
+                    <div class="meta"><strong>Devices</strong><span>Companion focus</span></div>
+                    <span class="chev">›</span>
+                  </div>
+                  <div class="list-row" style="opacity:0.45; pointer-events:none;">
+                    <div class="meta"><strong>Account</strong><span>Settings</span></div>
+                    <span class="chev">›</span>
+                  </div>
+                </div>
+                <div class="inline-alert blue">
+                  Share lives in the tab bar — not under Profile.
+                </div>
+              </div>
+            </section>
+
+            <!-- HISTORY TAB / BP detail -->
+            <section class="screen" id="screen-history-bp" data-title="BP History" data-tab="history">
+              <div class="nav">
+                <span class="nav-spacer"></span>
+                <div class="nav-title">Blood pressure</div>
+                <button class="nav-btn" data-go="history-share-entry">Share</button>
+              </div>
+              <div class="content">
+                <div class="context-chip">Mar 1 – Mar 31 · 128 readings</div>
+                <div class="card" style="padding:20px; min-height:180px;">
+                  <div style="height:120px; border-radius:10px; background:linear-gradient(180deg,#e8f4fc,#fff); display:grid; place-items:center; color:#0077c8; font-weight:600;">
+                    Chart placeholder
+                  </div>
+                  <p class="hint" style="margin-top:12px;">User is reviewing BP history and taps Share — package prefilled.</p>
+                </div>
+                <div class="card">
+                  <div class="list-row">
+                    <div class="meta"><strong>132 / 84</strong><span>Today · 8:12 AM · Device HEM-7156</span></div>
+                  </div>
+                  <div class="list-row">
+                    <div class="meta"><strong>128 / 80</strong><span>Yesterday · 7:55 AM</span></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- HISTORY SHARE SHORTCUT -->
+            <section class="screen" id="screen-history-share-entry" data-title="Share">
+              <div class="nav">
+                <button class="nav-btn" data-go="history-bp">Cancel</button>
+                <div class="nav-title">Share readings</div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="content">
+                <div class="prefill-banner">
+                  Prefixed from History: <strong>Blood pressure · 30 days</strong>
+                </div>
+                <div class="card interactive" data-go="package" data-prefill="bp">
+                  <div class="card-cta">
+                    <div class="icon">⬆</div>
+                    <div>
+                      <h3>Share now</h3>
+                      <p>Use this period and vital</p>
+                    </div>
+                    <span class="chev">›</span>
+                  </div>
+                </div>
+                <div class="card">
+                  <button class="list-row" data-go="package" data-prefill="bp">
+                    <div class="meta"><strong>Change package</strong><span>Vitals, dates, format</span></div>
+                    <span class="chev">›</span>
+                  </button>
+                  <button class="list-row" data-go="people">
+                    <div class="meta"><strong>Save for someone…</strong><span>Set a weekly schedule</span></div>
+                    <span class="chev">›</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- SHARE ROOT (tab) -->
+            <section class="screen active" id="screen-share-root" data-title="Share" data-tab="share">
+              <div class="nav">
+                <span class="nav-spacer"></span>
+                <div class="nav-title">Share</div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="content">
+                <div class="hero">
+                  <h2>Share readings</h2>
+                  <p>Download a file to your phone, or email readings to someone you trust.</p>
+                </div>
+
+                <div class="card interactive" data-go="package" data-prefill="default">
+                  <div class="card-cta">
+                    <div class="icon">⬆</div>
+                    <div>
+                      <h3>Share now</h3>
+                      <p>Build a package, then download or email</p>
+                    </div>
+                    <span class="chev">›</span>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <button class="list-row" data-go="people">
+                    <div class="avatar">👥</div>
+                    <div class="meta">
+                      <strong>People</strong>
+                      <span id="people-summary">2 people · 1 weekly email</span>
+                    </div>
+                    <span class="chev">›</span>
+                  </button>
+                  <button class="list-row" data-go="history">
+                    <div class="avatar">◷</div>
+                    <div class="meta">
+                      <strong>History</strong>
+                      <span>Downloads &amp; emails</span>
+                    </div>
+                    <span class="chev">›</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- PACKAGE -->
+            <section class="screen" id="screen-package" data-title="Package">
+              <div class="nav">
+                <button class="nav-btn" data-go="back">‹ Back</button>
+                <div class="nav-title">Package</div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="content padded-bottom">
+                <div class="section-label" style="margin-top:4px;">Type</div>
+                <div class="type-grid">
+                  <button class="type-card active" id="type-simple" data-type="simple">
+                    <strong>Simple export</strong>
+                    <span>Table of readings. PDF, CSV, or Excel.</span>
+                  </button>
+                  <button class="type-card" id="type-clinic" data-type="clinic">
+                    <strong>Clinic summary</strong>
+                    <span>Doctor-ready PDF overview.</span>
+                    <span class="badge">May be premium</span>
+                  </button>
+                </div>
+
+                <div class="section-label">Readings</div>
+                <div class="card" id="vitals-list">
+                  <button class="vital-row selected" data-vital="bp" data-count="128">
+                    <span class="check">✓</span>
+                    <span>Blood pressure</span>
+                    <span class="count">128</span>
+                  </button>
+                  <button class="vital-row selected" data-vital="weight" data-count="12">
+                    <span class="check">✓</span>
+                    <span>Weight</span>
+                    <span class="count">12</span>
+                  </button>
+                  <button class="vital-row disabled" data-vital="sleep" data-count="0" disabled>
+                    <span class="check"></span>
+                    <span>Sleep</span>
+                    <span class="count">0 in range</span>
+                  </button>
+                  <button class="vital-row" data-vital="activity" data-count="30">
+                    <span class="check"></span>
+                    <span>Activity</span>
+                    <span class="count">30</span>
+                  </button>
+                </div>
+
+                <div class="section-label">Period</div>
+                <div class="chips" id="period-chips">
+                  <button class="chip" data-period="7">7 days</button>
+                  <button class="chip active" data-period="30">30 days</button>
+                  <button class="chip" data-period="90">90 days</button>
+                  <button class="chip" data-period="custom">Custom</button>
+                </div>
+                <p class="hint" id="period-label">1 Mar 2026 – 31 Mar 2026</p>
+
+                <div id="format-block">
+                  <div class="section-label">Format</div>
+                  <div class="format-row chips" id="format-chips">
+                    <button class="chip active" data-format="pdf">PDF</button>
+                    <button class="chip" data-format="csv">CSV</button>
+                    <button class="chip" data-format="xls">Excel</button>
+                  </div>
+                </div>
+
+                <div id="clinic-fields" hidden>
+                  <div class="section-label">Needed for clinic summary</div>
+                  <div class="card">
+                    <div class="detail-kv">
+                      <span>Date of birth</span>
+                      <button class="btn ghost-link" style="padding:0;" data-action="fill-dob">Add</button>
+                    </div>
+                    <div class="detail-kv" id="dob-row" hidden>
+                      <span>Date of birth</span>
+                      <strong>12 May 1984</strong>
+                    </div>
+                  </div>
+                  <p class="hint">Only missing fields — not a multi-screen questionnaire.</p>
+                </div>
+              </div>
+              <div class="footer-bar">
+                <button class="btn primary" id="package-continue" data-go="delivery">Continue</button>
+              </div>
+            </section>
+
+            <!-- DELIVERY — JTBD: two jobs only -->
+            <section class="screen" id="screen-delivery" data-title="How">
+              <div class="nav">
+                <button class="nav-btn" data-go="package">‹ Package</button>
+                <div class="nav-title">How to share</div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="content">
+                <div class="hero">
+                  <h2>How do you want your readings?</h2>
+                  <p>One package. Two jobs.</p>
+                </div>
+
+                <div class="package-summary-chip" id="delivery-summary">
+                  <strong>Simple export · PDF</strong>
+                  Blood pressure, Weight · 30 days
+                </div>
+
+                <div class="job-stack">
+                  <button type="button" class="job-card" data-action="job-download">
+                    <div class="job-icon">↓</div>
+                    <div class="job-body">
+                      <strong>Download to this phone</strong>
+                      <span>Save a copy in Files on this iPhone</span>
+                    </div>
+                    <span class="job-chev">›</span>
+                  </button>
+
+                  <button type="button" class="job-card email" data-go="email-recipients">
+                    <div class="job-icon">✉</div>
+                    <div class="job-body">
+                      <strong>Email someone</strong>
+                      <span>Send to a doctor, family, or anyone with email</span>
+                    </div>
+                    <span class="job-chev">›</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- EMAIL RECIPIENTS — only for email job -->
+            <section class="screen" id="screen-email-recipients" data-title="Email">
+              <div class="nav">
+                <button class="nav-btn" data-go="delivery">‹ How to share</button>
+                <div class="nav-title">Email to</div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="content padded-bottom">
+                <div class="card" id="recipient-list">
+                  <button class="list-row recipient-row selected" data-recipient="patel">
+                    <span class="check">✓</span>
+                    <div class="avatar">DP</div>
+                    <div class="meta">
+                      <strong>Dr. Patel</strong>
+                      <span>Weekly · BP, weight</span>
+                    </div>
+                  </button>
+                  <button class="list-row recipient-row" data-recipient="sam">
+                    <span class="check"></span>
+                    <div class="avatar sam">S</div>
+                    <div class="meta">
+                      <strong>Sam</strong>
+                      <span>No schedule · Pending</span>
+                    </div>
+                  </button>
+                </div>
+
+                <div class="card">
+                  <button class="list-row" data-action="open-new-person">
+                    <div class="avatar">＋</div>
+                    <div class="meta">
+                      <strong>Someone new</strong>
+                      <span>Email once, optionally save to People</span>
+                    </div>
+                    <span class="chev">›</span>
+                  </button>
+                </div>
+              </div>
+              <div class="footer-bar">
+                <button class="btn primary" id="recipients-continue" data-go="review">Continue</button>
+              </div>
+            </section>
+
+            <!-- REVIEW — email path only -->
+            <section class="screen" id="screen-review" data-title="Review">
+              <div class="nav">
+                <button class="nav-btn" data-go="email-recipients">‹ Email to</button>
+                <div class="nav-title">Review</div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="content padded-bottom">
+                <div class="card">
+                  <div class="summary-block">
+                    <h4>Package</h4>
+                    <p id="review-package">Simple export · PDF</p>
+                    <p id="review-vitals">Blood pressure, Weight · 30 days</p>
+                    <p id="review-dates">1 Mar 2026 – 31 Mar 2026</p>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="summary-block">
+                    <h4>Email to</h4>
+                    <p id="review-to">Dr. Patel</p>
+                  </div>
+                </div>
+                <div class="section-label">Note (optional)</div>
+                <div class="field">
+                  <textarea id="review-note" placeholder="Add a short note for the recipient"></textarea>
+                </div>
+                <div class="card" id="weekly-toggle-card">
+                  <div class="toggle-row">
+                    <div>
+                      <strong style="display:block; font-size:15px;">Also email weekly?</strong>
+                      <span style="font-size:13px; color:var(--muted);" id="weekly-hint">Uses this package for the selected person</span>
+                    </div>
+                    <button class="toggle" id="weekly-toggle" aria-label="Also email weekly" type="button"></button>
+                  </div>
+                </div>
+              </div>
+              <div class="footer-bar">
+                <button class="btn primary" id="send-btn">Send email</button>
+              </div>
+            </section>
+
+            <!-- SUCCESS -->
+            <section class="screen" id="screen-success" data-title="Done">
+              <div class="nav">
+                <span class="nav-spacer"></span>
+                <div class="nav-title"></div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="success">
+                <div class="check-big">✓</div>
+                <h2 id="success-title">Shared</h2>
+                <p id="success-body">Your readings package is ready.</p>
+              </div>
+              <div class="footer-bar">
+                <button class="btn primary" data-go="share-root">Done</button>
+                <button class="btn secondary" data-go="history">View history</button>
+              </div>
+            </section>
+
+            <!-- PEOPLE -->
+            <section class="screen" id="screen-people" data-title="People">
+              <div class="nav">
+                <button class="nav-btn" data-go="share-root">‹ Share</button>
+                <div class="nav-title">People</div>
+                <button class="nav-btn" data-action="open-new-person">＋</button>
+              </div>
+              <div class="content">
+                <div class="card" id="people-list">
+                  <button class="list-row" data-go="person-patel">
+                    <div class="avatar">DP</div>
+                    <div class="meta">
+                      <strong>Dr. Patel</strong>
+                      <span>doctor@clinic.com</span>
+                      <span>Weekly · BP, weight · Next Mon 7 Apr</span>
+                    </div>
+                    <span class="status-pill active">Active</span>
+                    <span class="chev">›</span>
+                  </button>
+                  <button class="list-row" data-go="person-sam">
+                    <div class="avatar sam">S</div>
+                    <div class="meta">
+                      <strong>Sam</strong>
+                      <span>sam@email.com</span>
+                      <span>Send only when you choose</span>
+                    </div>
+                    <span class="status-pill pending">Pending</span>
+                    <span class="chev">›</span>
+                  </button>
+                </div>
+                <p class="hint">People is only for email and weekly schedules — not for downloading to your phone.</p>
+              </div>
+            </section>
+
+            <!-- PERSON PATEL -->
+            <section class="screen" id="screen-person-patel" data-title="Person">
+              <div class="nav">
+                <button class="nav-btn" data-go="people">‹ People</button>
+                <div class="nav-title">Dr. Patel</div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="content padded-bottom">
+                <div class="card">
+                  <div class="detail-kv"><span>Email</span><strong>doctor@clinic.com</strong></div>
+                  <div class="detail-kv"><span>Status</span><strong><span class="status-pill active">Active</span></strong></div>
+                </div>
+
+                <div class="section-label">Default package</div>
+                <div class="card">
+                  <button class="list-row" data-action="toast" data-toast="Would open package defaults editor">
+                    <div class="meta"><strong>Type</strong><span>Clinic summary</span></div>
+                    <span class="chev">›</span>
+                  </button>
+                  <button class="list-row" data-action="toast" data-toast="Would edit vitals for this person">
+                    <div class="meta"><strong>Readings</strong><span>Blood pressure, Weight</span></div>
+                    <span class="chev">›</span>
+                  </button>
+                  <button class="list-row" data-action="toast" data-toast="Would edit period default">
+                    <div class="meta"><strong>Period</strong><span>Last 30 days</span></div>
+                    <span class="chev">›</span>
+                  </button>
+                </div>
+
+                <div class="section-label">Schedule</div>
+                <div class="segmented" id="schedule-patel">
+                  <button type="button" data-sched="off">Off</button>
+                  <button type="button" class="active" data-sched="weekly">Weekly</button>
+                  <button type="button" data-sched="monthly">Monthly</button>
+                </div>
+                <p class="hint" id="schedule-next">Next send: Mon 7 Apr</p>
+
+                <div class="footer-bar" style="position:static; padding:16px 0 0; background:transparent;">
+                  <button class="btn primary" data-go="package" data-prefill="person-patel">Send now</button>
+                  <button class="btn danger" data-action="toast" data-toast="Would remove person and cancel schedule">Remove person</button>
+                </div>
+              </div>
+            </section>
+
+            <!-- PERSON SAM -->
+            <section class="screen" id="screen-person-sam" data-title="Person">
+              <div class="nav">
+                <button class="nav-btn" data-go="people">‹ People</button>
+                <div class="nav-title">Sam</div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="content">
+                <div class="card">
+                  <div class="detail-kv"><span>Email</span><strong>sam@email.com</strong></div>
+                  <div class="detail-kv"><span>Status</span><strong><span class="status-pill pending">Pending</span></strong></div>
+                </div>
+                <div class="inline-alert">Waiting for Sam to accept. You can still prepare a package; delivery may wait until they accept.</div>
+                <div class="section-label">Schedule</div>
+                <div class="segmented">
+                  <button type="button" class="active">Off</button>
+                  <button type="button">Weekly</button>
+                  <button type="button">Monthly</button>
+                </div>
+                <div style="height:16px"></div>
+                <button class="btn primary" data-go="package" data-prefill="person-sam">Send now</button>
+              </div>
+            </section>
+
+            <!-- SHARE HISTORY -->
+            <section class="screen" id="screen-history" data-title="History">
+              <div class="nav">
+                <button class="nav-btn" data-go="share-root">‹ Share</button>
+                <div class="nav-title">History</div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="content">
+                <div class="card">
+                  <button class="list-row" data-action="toast" data-toast="Downloaded to Files">
+                    <div class="meta">
+                      <strong>31 Mar · <span class="history-status saved">Downloaded</span></strong>
+                      <span>PDF · Saved to Files on this iPhone</span>
+                      <span>BP, weight · 30 days</span>
+                    </div>
+                    <span class="chev">›</span>
+                  </button>
+                  <button class="list-row" data-action="toast" data-toast="Email details">
+                    <div class="meta">
+                      <strong>31 Mar · <span class="history-status">Emailed</span></strong>
+                      <span>Clinic summary → Dr. Patel</span>
+                      <span>BP · 1–31 Mar</span>
+                    </div>
+                    <span class="chev">›</span>
+                  </button>
+                  <button class="list-row" data-action="toast" data-toast="CSV downloaded">
+                    <div class="meta">
+                      <strong>12 Mar · <span class="history-status saved">Downloaded</span></strong>
+                      <span>CSV · Saved to Files</span>
+                      <span>All readings · 90 days</span>
+                    </div>
+                    <span class="chev">›</span>
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- DOWNLOAD — one job: save on phone; Share uses system sheet -->
+            <section class="screen" id="screen-me-share" data-title="Download">
+              <div class="nav">
+                <button class="nav-btn" data-go="delivery">Cancel</button>
+                <div class="nav-title">Download</div>
+                <span class="nav-spacer"></span>
+              </div>
+              <div class="content">
+                <div class="share-preview">
+                  <div class="doc-icon" aria-hidden="true">PDF</div>
+                  <span class="file-name" id="me-file-name">OMRON_readings_Mar2026.pdf</span>
+                  <p class="file-meta" id="me-file-meta">PDF · ready to save</p>
+                </div>
+
+                <div class="share-actions">
+                  <button type="button" class="btn primary" data-action="me-share-done" data-channel="Files">
+                    Save to Files
+                  </button>
+                  <button type="button" class="btn secondary" data-action="me-share-done" data-channel="Share">
+                    Share…
+                  </button>
+                </div>
+                <p class="share-footnote">Share opens the iOS share sheet for AirDrop, Messages, and other apps.</p>
+              </div>
+            </section>
+
+            <!-- TAB BAR -->
+            <nav class="tabbar" id="tabbar" aria-label="Main">
+              <button type="button" data-tab="dashboard" data-go="dashboard">
+                <span class="tab-icon" aria-hidden="true">⌂</span>
+                Home
+              </button>
+              <button type="button" data-tab="history" data-go="history-bp">
+                <span class="tab-icon" aria-hidden="true">▤</span>
+                History
+              </button>
+              <button type="button" class="active" data-tab="share" data-go="share-root">
+                <span class="tab-icon" aria-hidden="true">↗</span>
+                Share
+              </button>
+              <button type="button" data-tab="profile" data-go="profile">
+                <span class="tab-icon" aria-hidden="true">☺</span>
+                Profile
+              </button>
+            </nav>
+
+          </div>
+
+          <!-- NEW PERSON SHEET -->
+          <div class="sheet-backdrop" id="new-person-sheet">
+            <div class="sheet" role="dialog" aria-label="New person">
+              <div class="sheet-handle"></div>
+              <h3>New person</h3>
+              <div class="field">
+                <label for="np-name">Name</label>
+                <input id="np-name" type="text" placeholder="e.g. Dr. Lee" />
+              </div>
+              <div class="field">
+                <label for="np-email">Email</label>
+                <input id="np-email" type="email" placeholder="name@clinic.com" />
+              </div>
+              <div class="card" style="margin-bottom:14px;">
+                <div class="toggle-row">
+                  <div>
+                    <strong style="display:block; font-size:15px;">Save for next time</strong>
+                    <span style="font-size:13px; color:var(--muted);">Adds to People</span>
+                  </div>
+                  <button class="toggle on" id="save-person-toggle" type="button" aria-label="Save for next time"></button>
+                </div>
+              </div>
+              <button class="btn primary" id="add-person-btn">Add</button>
+              <button class="btn secondary" data-action="close-sheet">Cancel</button>
+            </div>
+          </div>
+
+          <div class="toast" id="toast"></div>
+          <div class="home-indicator"></div>
+        </div>
+      </div>
+
+      <aside class="launcher">
+        <h3>Jump to</h3>
+        <div class="launcher-grid">
+          <button data-go="share-root"><strong>Share tab</strong><span>Simple home</span></button>
+          <button data-go="package"><strong>Package</strong><span>What to share</span></button>
+          <button data-go="delivery"><strong>How to share</strong><span>Download · Email (JTBD)</span></button>
+          <button data-go="email-recipients"><strong>Email someone</strong><span>People only</span></button>
+          <button data-go="me-share"><strong>Download</strong><span>Save to Files · Share…</span></button>
+          <button data-go="people"><strong>People</strong><span>Email address book</span></button>
+          <button data-go="history"><strong>History</strong><span>Past shares</span></button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      stack: ["share-root"],
+      packageType: "simple",
+      period: "30",
+      format: "pdf",
+      vitals: new Set(["bp", "weight"]),
+      recipients: new Set(["patel"]),
+      weekly: false,
+      dobFilled: false,
+      prefill: "default",
+      customPeople: [],
+      deliveryJob: null, // download | email
+    };
+
+    // Root tabs show the tab bar; nested screens hide it.
+    const tabRoots = {
+      dashboard: "dashboard",
+      "history-bp": "history",
+      "share-root": "share",
+      profile: "profile",
+    };
+
+    const screens = {
+      dashboard: "screen-dashboard",
+      profile: "screen-profile",
+      "share-root": "screen-share-root",
+      "history-bp": "screen-history-bp",
+      "history-share-entry": "screen-history-share-entry",
+      package: "screen-package",
+      delivery: "screen-delivery",
+      "email-recipients": "screen-email-recipients",
+      review: "screen-review",
+      success: "screen-success",
+      people: "screen-people",
+      "person-patel": "screen-person-patel",
+      "person-sam": "screen-person-sam",
+      history: "screen-history",
+      "me-share": "screen-me-share",
+    };
+
+    const vitalLabels = {
+      bp: "Blood pressure",
+      weight: "Weight",
+      sleep: "Sleep",
+      activity: "Activity",
+    };
+
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => el.classList.remove("show"), 1800);
+    }
+
+    function applyPrefill(prefill) {
+      state.prefill = prefill || "default";
+      if (prefill === "bp") {
+        state.vitals = new Set(["bp"]);
+        state.period = "30";
+        state.packageType = "simple";
+        state.format = "pdf";
+      } else if (prefill === "person-patel") {
+        state.vitals = new Set(["bp", "weight"]);
+        state.packageType = "clinic";
+        state.period = "30";
+        state.recipients = new Set(["patel"]);
+      } else if (prefill === "person-sam") {
+        state.vitals = new Set(["bp"]);
+        state.packageType = "simple";
+        state.recipients = new Set(["sam"]);
+      } else {
+        state.vitals = new Set(["bp", "weight"]);
+        state.period = "30";
+        state.packageType = "simple";
+      }
+      syncPackageUI();
+      syncRecipientsUI();
+    }
+
+    function syncTabBar(id) {
+      const app = document.getElementById("app");
+      const isTabRoot = Object.prototype.hasOwnProperty.call(tabRoots, id);
+      app.classList.toggle("has-tabbar", isTabRoot);
+
+      const activeTab = tabRoots[id] || null;
+      document.querySelectorAll("#tabbar button").forEach((btn) => {
+        const on = activeTab && btn.dataset.tab === activeTab;
+        btn.classList.toggle("active", !!on);
+      });
+    }
+
+    function go(id, opts = {}) {
+      if (id === "back") {
+        if (state.stack.length > 1) {
+          state.stack.pop();
+          id = state.stack[state.stack.length - 1];
+        } else {
+          id = "share-root";
+        }
+      } else if (Object.prototype.hasOwnProperty.call(tabRoots, id)) {
+        // Switching main tabs resets the stack to that root
+        state.stack = [id];
+      } else if (!opts.replace) {
+        const current = state.stack[state.stack.length - 1];
+        if (current !== id) state.stack.push(id);
+      } else {
+        state.stack[state.stack.length - 1] = id;
+      }
+
+      if (opts.prefill) applyPrefill(opts.prefill);
+
+      Object.values(screens).forEach((sid) => {
+        const node = document.getElementById(sid);
+        if (node) node.classList.remove("active");
+      });
+      const el = document.getElementById(screens[id]);
+      if (!el) return;
+      el.classList.add("active");
+      syncTabBar(id);
+
+      if (id === "package") syncPackageUI();
+      if (id === "delivery") syncDeliveryUI();
+      if (id === "email-recipients") {
+        state.deliveryJob = "email";
+        syncRecipientsUI();
+      }
+      if (id === "review") syncReviewUI();
+      if (id === "me-share") {
+        state.deliveryJob = "download";
+        document.getElementById("me-file-name").textContent = fileName();
+      }
+    }
+
+    function fileName() {
+      const ext = state.packageType === "clinic" ? "pdf" : state.format === "xls" ? "xlsx" : state.format;
+      return `OMRON_readings_Mar2026.${ext}`;
+    }
+
+    function packageTypeLabel() {
+      if (state.packageType === "clinic") return "Clinic summary · PDF";
+      return `Simple export · ${state.format.toUpperCase()}`;
+    }
+
+    function syncDeliveryUI() {
+      const el = document.getElementById("delivery-summary");
+      if (!el) return;
+      el.innerHTML =
+        `<strong>${packageTypeLabel()}</strong>` +
+        `${selectedVitalLabels().join(", ") || "Readings"} · ${periodShort()}`;
+    }
+
+    function selectedVitalLabels() {
+      return [...state.vitals].map((v) => vitalLabels[v]).filter(Boolean);
+    }
+
+    function periodText() {
+      if (state.period === "7") return "25 Mar 2026 – 31 Mar 2026";
+      if (state.period === "90") return "1 Jan 2026 – 31 Mar 2026";
+      if (state.period === "custom") return "Custom range (demo)";
+      return "1 Mar 2026 – 31 Mar 2026";
+    }
+
+    function periodShort() {
+      if (state.period === "7") return "7 days";
+      if (state.period === "90") return "90 days";
+      if (state.period === "custom") return "Custom";
+      return "30 days";
+    }
+
+    function syncPackageUI() {
+      document.getElementById("type-simple").classList.toggle("active", state.packageType === "simple");
+      document.getElementById("type-clinic").classList.toggle("active", state.packageType === "clinic");
+      document.getElementById("format-block").hidden = state.packageType !== "simple";
+      document.getElementById("clinic-fields").hidden = state.packageType !== "clinic";
+
+      document.querySelectorAll("#period-chips .chip").forEach((c) => {
+        c.classList.toggle("active", c.dataset.period === state.period);
+      });
+      document.querySelectorAll("#format-chips .chip").forEach((c) => {
+        c.classList.toggle("active", c.dataset.format === state.format);
+      });
+      document.getElementById("period-label").textContent = periodText();
+
+      document.querySelectorAll("#vitals-list .vital-row").forEach((row) => {
+        if (row.disabled) return;
+        const on = state.vitals.has(row.dataset.vital);
+        row.classList.toggle("selected", on);
+        row.querySelector(".check").textContent = on ? "✓" : "";
+      });
+
+      if (state.dobFilled) {
+        document.querySelector('#clinic-fields .detail-kv:not(#dob-row)').hidden = true;
+        document.getElementById("dob-row").hidden = false;
+      }
+
+      const cont = document.getElementById("package-continue");
+      const hasVitals = state.vitals.size > 0;
+      const clinicOk = state.packageType === "simple" || state.dobFilled;
+      cont.disabled = !hasVitals || !clinicOk;
+      cont.textContent = !hasVitals
+        ? "Select at least one reading"
+        : state.packageType === "clinic" && !state.dobFilled
+          ? "Add required fields"
+          : "Continue";
+    }
+
+    function recipientLabel(id) {
+      if (id === "patel") return "Dr. Patel";
+      if (id === "sam") return "Sam";
+      const custom = state.customPeople.find((p) => p.id === id);
+      return custom ? custom.name : id;
+    }
+
+    function syncRecipientsUI() {
+      // Email path only — never "me"
+      state.recipients.delete("me");
+      document.querySelectorAll("#recipient-list .recipient-row").forEach((row) => {
+        const id = row.dataset.recipient;
+        if (!id) return;
+        const on = state.recipients.has(id);
+        row.classList.toggle("selected", on);
+        const check = row.querySelector(".check");
+        if (check) check.textContent = on ? "✓" : "";
+      });
+      const cont = document.getElementById("recipients-continue");
+      cont.disabled = state.recipients.size === 0;
+      cont.textContent = state.recipients.size === 0 ? "Select who to email" : "Continue";
+    }
+
+    function syncReviewUI() {
+      document.getElementById("review-package").textContent = packageTypeLabel();
+      document.getElementById("review-vitals").textContent =
+        `${selectedVitalLabels().join(", ") || "No vitals"} · ${periodShort()}`;
+      document.getElementById("review-dates").textContent = periodText();
+
+      state.recipients.delete("me");
+      const names = [...state.recipients].map(recipientLabel);
+      document.getElementById("review-to").textContent = names.join(", ") || "—";
+
+      const onlyOnePerson = state.recipients.size === 1;
+      document.getElementById("weekly-toggle-card").style.display = onlyOnePerson ? "" : "none";
+      if (onlyOnePerson) {
+        document.getElementById("weekly-hint").textContent =
+          `Uses this package for ${names[0]}`;
+      }
+
+      document.getElementById("send-btn").textContent = "Send email";
+    }
+
+    function doSend() {
+      state.recipients.delete("me");
+      if (state.recipients.size === 0) {
+        showToast("Select who to email");
+        return;
+      }
+
+      const people = [...state.recipients].map(recipientLabel);
+      const vitals = selectedVitalLabels().join(" & ");
+      document.getElementById("success-title").textContent = "Emailed";
+      document.getElementById("success-body").textContent =
+        `${people.join(", ")} will get your ${periodShort()} ${vitals} package.` +
+        (state.weekly ? " Weekly email is on." : "");
+      go("success");
+    }
+
+    // Navigation clicks
+    document.body.addEventListener("click", (e) => {
+      const goEl = e.target.closest("[data-go]");
+      if (goEl) {
+        e.preventDefault();
+        go(goEl.dataset.go, { prefill: goEl.dataset.prefill });
+        return;
+      }
+
+      const actionEl = e.target.closest("[data-action]");
+      if (!actionEl) return;
+      const action = actionEl.dataset.action;
+
+      if (action === "open-new-person") {
+        document.getElementById("new-person-sheet").classList.add("show");
+      } else if (action === "close-sheet") {
+        document.getElementById("new-person-sheet").classList.remove("show");
+      } else if (action === "toast") {
+        showToast(actionEl.dataset.toast || "Demo action");
+      } else if (action === "fill-dob") {
+        state.dobFilled = true;
+        syncPackageUI();
+        showToast("Date of birth added");
+      } else if (action === "job-download") {
+        state.deliveryJob = "download";
+        document.getElementById("me-file-name").textContent = fileName();
+        go("me-share");
+      } else if (action === "me-share-done") {
+        const channel = actionEl.dataset.channel || "Files";
+        document.getElementById("success-title").textContent =
+          channel === "Files" ? "Saved to Files" : "Shared";
+        document.getElementById("success-body").textContent =
+          channel === "Files"
+            ? `${fileName()} is in Files on this iPhone.`
+            : `${fileName()} was shared with the system share sheet.`;
+        go("success");
+      }
+    });
+
+    // Package type
+    document.getElementById("type-simple").addEventListener("click", () => {
+      state.packageType = "simple";
+      syncPackageUI();
+    });
+    document.getElementById("type-clinic").addEventListener("click", () => {
+      state.packageType = "clinic";
+      syncPackageUI();
+    });
+
+    // Period / format
+    document.getElementById("period-chips").addEventListener("click", (e) => {
+      const chip = e.target.closest(".chip");
+      if (!chip) return;
+      state.period = chip.dataset.period;
+      if (state.period === "custom") showToast("Custom date picker would open");
+      syncPackageUI();
+    });
+    document.getElementById("format-chips").addEventListener("click", (e) => {
+      const chip = e.target.closest(".chip");
+      if (!chip) return;
+      state.format = chip.dataset.format;
+      syncPackageUI();
+    });
+
+    // Vitals
+    document.getElementById("vitals-list").addEventListener("click", (e) => {
+      const row = e.target.closest(".vital-row");
+      if (!row || row.disabled) return;
+      const v = row.dataset.vital;
+      if (state.vitals.has(v)) state.vitals.delete(v);
+      else state.vitals.add(v);
+      syncPackageUI();
+    });
+
+    // Email recipients only
+    document.getElementById("app").addEventListener("click", (e) => {
+      const row = e.target.closest("#recipient-list .recipient-row");
+      if (!row || !row.dataset.recipient) return;
+      e.preventDefault();
+      const id = row.dataset.recipient;
+      if (id === "me") return;
+      if (state.recipients.has(id)) state.recipients.delete(id);
+      else state.recipients.add(id);
+      syncRecipientsUI();
+    });
+
+    document.getElementById("weekly-toggle").addEventListener("click", function () {
+      state.weekly = !state.weekly;
+      this.classList.toggle("on", state.weekly);
+    });
+
+    document.getElementById("save-person-toggle").addEventListener("click", function () {
+      this.classList.toggle("on");
+    });
+
+    document.getElementById("send-btn").addEventListener("click", doSend);
+
+    document.getElementById("add-person-btn").addEventListener("click", () => {
+      const name = document.getElementById("np-name").value.trim() || "New person";
+      const email = document.getElementById("np-email").value.trim() || "email@example.com";
+      const save = document.getElementById("save-person-toggle").classList.contains("on");
+      const id = "custom-" + Date.now();
+      if (save) {
+        state.customPeople.push({ id, name, email });
+        // Add to people list & recipient list visually
+        const peopleList = document.getElementById("people-list");
+        const btn = document.createElement("button");
+        btn.className = "list-row";
+        btn.innerHTML = `
+          <div class="avatar">${name.slice(0, 1).toUpperCase()}</div>
+          <div class="meta">
+            <strong>${name}</strong>
+            <span>${email}</span>
+            <span>Send only when you choose</span>
+          </div>
+          <span class="status-pill active">Active</span>
+          <span class="chev">›</span>`;
+        peopleList.appendChild(btn);
+
+        const recList = document.getElementById("recipient-list");
+        const rbtn = document.createElement("button");
+        rbtn.className = "list-row recipient-row selected";
+        rbtn.dataset.recipient = id;
+        rbtn.innerHTML = `
+          <span class="check">✓</span>
+          <div class="avatar">${name.slice(0, 1).toUpperCase()}</div>
+          <div class="meta"><strong>${name}</strong><span>Just added</span></div>`;
+        recList.appendChild(rbtn);
+        document.getElementById("people-summary").textContent =
+          `${2 + state.customPeople.length} people · 1 weekly`;
+      }
+      state.recipients.add(id);
+      document.getElementById("np-name").value = "";
+      document.getElementById("np-email").value = "";
+      document.getElementById("new-person-sheet").classList.remove("show");
+      syncRecipientsUI();
+      showToast(save ? `${name} saved` : `${name} added for this send`);
+    });
+
+    document.getElementById("new-person-sheet").addEventListener("click", (e) => {
+      if (e.target.id === "new-person-sheet") {
+        e.target.classList.remove("show");
+      }
+    });
+
+    // Schedule segmented
+    document.getElementById("schedule-patel").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-sched]");
+      if (!btn) return;
+      document.querySelectorAll("#schedule-patel button").forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+      const map = {
+        off: "No automatic sends",
+        weekly: "Next send: Mon 7 Apr",
+        monthly: "Next send: 1 May",
+      };
+      document.getElementById("schedule-next").textContent = map[btn.dataset.sched];
+      showToast("Schedule: " + btn.dataset.sched);
+    });
+
+    // Init — land on Share tab
+    syncPackageUI();
+    syncRecipientsUI();
+    syncTabBar("share-root");
+  </script>
+</body>
+</html>
