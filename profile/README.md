@@ -1,7 +1,7 @@
 # Profile 10× — full flows
 
-**Live:** https://royatluscii.github.io/share-readings-10x-prototype/profile/  
-**Hub:** https://royatluscii.github.io/share-readings-10x-prototype/
+**Live:** https://royatluscii.github.io/prototypes/profile/  
+**Hub:** https://royatluscii.github.io/prototypes/
 
 ## Scenarios (S0–S9)
 | ID | Lands | Verifies |
