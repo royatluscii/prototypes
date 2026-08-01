@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Share Readings — 10× variant</title>
+  <style>
+    :root {
+      --bg: #f2f2f7;
+      --surface: #ffffff;
+      --ink: #000;
+      --muted: #8e8e93;
+      --line: rgba(60, 60, 67, 0.12);
+      --line-strong: rgba(60, 60, 67, 0.29);
+      --blue: #0077c8;
+      --blue-ios: #007aff;
+      --blue-soft: #e8f4fc;
+      --green: #34c759;
+      --green-ink: #1a7f37;
+      --amber: #b25000;
+      --amber-bg: #fff8f0;
+      --red: #ff3b30;
+      --radius: 12px;
+      --safe-top: 54px;
+      --safe-bottom: 28px;
+      --nav-h: 44px;
+      --tab-h: 49px;
+      --phone-w: 390px;
+      --phone-h: 844px;
+      --footer-h: 168px;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0; min-height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, #dbeafe 0%, transparent 50%),
+        radial-gradient(900px 500px at 100% 0%, #e0f2fe 0%, transparent 45%),
+        #0f172a;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+    .page {
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+      gap: 16px; padding: 20px 14px 36px;
+    }
+    .chrome { text-align: center; color: #e2e8f0; max-width: 640px; }
+    .chrome h1 { margin: 0 0 6px; font-size: 22px; font-weight: 650; letter-spacing: -0.02em; }
+    .chrome p { margin: 0; font-size: 14px; color: #94a3b8; line-height: 1.45; }
+    .chrome .pills {
+      margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+    }
+    .chrome .pills span {
+      background: rgba(56, 189, 248, 0.12); color: #7dd3fc;
+      border: 1px solid rgba(56, 189, 248, 0.28); border-radius: 999px;
+      padding: 4px 10px; font-size: 12px; font-weight: 600;
+    }
+    .scenario-block {
+      margin-top: 14px; text-align: left;
+      background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 14px; padding: 12px 14px;
+    }
+    .scenario-block h2 {
+      margin: 0 0 8px; font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #94a3b8; font-weight: 700;
+    }
+    .state-toggle { display: flex; gap: 6px; flex-wrap: wrap; }
+    .state-toggle button {
+      border: 1px solid rgba(148, 163, 184, 0.35); background: rgba(30, 41, 59, 0.75);
+      color: #e2e8f0; border-radius: 999px; padding: 7px 11px; font: inherit;
+      font-size: 11px; font-weight: 600; cursor: pointer; text-align: left;
+    }
+    .state-toggle button.on {
+      background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.45); color: #7dd3fc;
+    }
+    .state-toggle button em {
+      display: block; font-style: normal; font-weight: 500; font-size: 10px;
+      color: #94a3b8; margin-top: 2px;
+    }
+    .state-toggle button.on em { color: #a5f3fc; }
+
+    .stage { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+
+    .phone {
+      width: var(--phone-w); height: var(--phone-h); background: #000; border-radius: 44px;
+      padding: 12px; box-shadow: 0 8px 28px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+    .sw {
+      width: 100%; height: 100%; background: var(--bg); border-radius: 34px;
+      overflow: hidden; position: relative;
+    }
+    .notch {
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 28px; background: #000; border-radius: 20px; z-index: 30;
+    }
+    .status {
+      position: absolute; top: 14px; left: 28px; right: 28px; font-size: 15px; font-weight: 600;
+      z-index: 20; display: flex; justify-content: space-between; pointer-events: none;
+    }
+    .home-ind {
+      position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+      width: 128px; height: 5px; background: #111; border-radius: 99px; opacity: 0.28; z-index: 25;
+    }
+
+    .app {
+      position: absolute; inset: 0;
+      padding-top: var(--safe-top);
+      padding-bottom: calc(var(--safe-bottom) + var(--tab-h));
+      display: flex; flex-direction: column;
+    }
+    /* padding-top is safe-area only — no tester chrome inside the phone */
+    .app.no-tab { padding-bottom: var(--safe-bottom); }
+    .app.no-tab .tabbar { display: none; }
+    .app.has-footer { padding-bottom: calc(var(--safe-bottom) + var(--tab-h) + var(--footer-h)); }
+    .app.no-tab.has-footer { padding-bottom: calc(var(--safe-bottom) + var(--footer-h)); }
+
+    .screen { display: none; flex: 1; flex-direction: column; min-height: 0; }
+    .screen.on { display: flex; }
+
+    .nav {
+      min-height: var(--nav-h); display: flex; align-items: center; justify-content: center;
+      position: relative; flex-shrink: 0; padding: 0 8px;
+    }
+    .nav.large { flex-direction: column; align-items: stretch; min-height: auto; padding: 4px 16px 8px; }
+    .nav .t {
+      font-weight: 600; font-size: 17px; letter-spacing: -0.02em;
+      max-width: 60%; text-align: center;
+    }
+    .nav.large .t {
+      font-size: 34px; font-weight: 700; letter-spacing: -0.03em;
+      max-width: none; text-align: left; margin-top: 4px; line-height: 1.1;
+    }
+    .nav .back, .nav .link {
+      position: absolute; border: 0; background: 0; color: var(--blue-ios);
+      font-size: 17px; padding: 10px 12px; cursor: pointer; font-family: inherit;
+    }
+    .nav .back { left: 4px; display: flex; align-items: center; gap: 2px; }
+    .nav .back svg { width: 12px; height: 20px; }
+    .nav .link { right: 4px; font-weight: 400; }
+
+    .content {
+      flex: 1; overflow-y: auto; padding: 0 16px 20px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .section-label {
+      font-size: 13px; color: var(--muted); text-transform: uppercase;
+      letter-spacing: -0.01em; margin: 18px 0 7px;
+    }
+    .section-label:first-child { margin-top: 4px; }
+
+    .group {
+      background: var(--surface); border-radius: var(--radius); overflow: hidden;
+    }
+    .group + .section-label { margin-top: 20px; }
+
+    .row {
+      display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px;
+      padding: 11px 16px; border: 0; background: var(--surface); text-align: left;
+      font: inherit; color: inherit; cursor: pointer; position: relative;
+    }
+    .row:active { background: #e5e5ea; }
+    .row + .row::before {
+      content: ""; position: absolute; left: 16px; right: 0; top: 0;
+      height: 0.5px; background: var(--line-strong);
+    }
+    .row.with-ic + .row::before { left: 52px; }
+    .meta { flex: 1; min-width: 0; }
+    .meta .title { display: block; font-size: 17px; letter-spacing: -0.02em; }
+    .meta .sub { display: block; font-size: 13px; color: var(--muted); margin-top: 1px; }
+    .chev { color: #c7c7cc; font-size: 18px; }
+    .val { font-size: 17px; color: var(--muted); }
+
+    .av {
+      width: 36px; height: 36px; border-radius: 50%; background: #e8f4fc; color: var(--blue);
+      display: grid; place-items: center; font-size: 13px; font-weight: 700; flex-shrink: 0;
+    }
+    .av.g { background: #e8f8ed; color: var(--green-ink); }
+
+    .primary-cta {
+      width: 100%; border: 0; border-radius: 14px; padding: 18px 16px;
+      background: linear-gradient(135deg, #0077c8, #0ea5e9); color: #fff;
+      text-align: left; font: inherit; cursor: pointer;
+      display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 8px 20px rgba(0, 119, 200, 0.28);
+    }
+    .primary-cta:active { opacity: 0.92; transform: scale(0.99); }
+    .primary-cta .ic {
+      width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.2);
+      display: grid; place-items: center; font-size: 20px; font-weight: 700; flex-shrink: 0;
+    }
+    .primary-cta strong { display: block; font-size: 18px; font-weight: 650; letter-spacing: -0.02em; }
+    .primary-cta span { display: block; font-size: 13px; opacity: 0.9; margin-top: 2px; }
+    .primary-cta .chev { margin-left: auto; color: rgba(255,255,255,0.85); font-size: 22px; }
+
+    .context-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--blue-soft); color: #005fa0;
+      border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .context-pill.warn { background: var(--amber-bg); color: var(--amber); }
+
+    .seg {
+      display: flex; background: #e5e5ea; border-radius: 9px; padding: 2px; margin-bottom: 4px;
+    }
+    .seg button {
+      flex: 1; border: 0; background: transparent; border-radius: 7px;
+      padding: 8px 10px; font: inherit; font-size: 13px; font-weight: 600;
+      color: var(--ink); cursor: pointer;
+    }
+    .seg button.on {
+      background: var(--surface);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .seg button .badge {
+      display: block; font-size: 10px; font-weight: 500; color: var(--muted); margin-top: 1px;
+    }
+    .seg button.on .badge { color: var(--blue); }
+
+    .vital {
+      display: flex; align-items: center; gap: 12px; width: 100%;
+      padding: 12px 16px; border: 0; background: var(--surface); text-align: left;
+      font: inherit; cursor: pointer; position: relative;
+    }
+    .vital + .vital::before {
+      content: ""; position: absolute; left: 52px; right: 0; top: 0;
+      height: 0.5px; background: var(--line-strong);
+    }
+    .vital .box {
+      width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid #c7c7cc;
+      display: grid; place-items: center; flex-shrink: 0; font-size: 13px; color: #fff;
+    }
+    .vital.on .box { background: var(--blue); border-color: var(--blue); }
+    .vital .name { flex: 1; font-size: 17px; }
+    .vital .count { font-size: 15px; color: var(--muted); }
+    .vital.hidden { display: none; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chips button {
+      border: 0; background: var(--surface); border-radius: 999px;
+      padding: 8px 14px; font: inherit; font-size: 15px; font-weight: 500;
+      color: var(--ink); cursor: pointer; box-shadow: 0 0 0 0.5px var(--line-strong);
+    }
+    .chips button.on { background: var(--blue); color: #fff; box-shadow: none; }
+    .chips button:disabled { opacity: 0.4; }
+
+    .date-range {
+      margin: 8px 2px 0; font-size: 13px; color: var(--muted);
+    }
+
+    .clinic-banner {
+      display: none; margin-top: 14px; background: var(--amber-bg); border-radius: var(--radius);
+      padding: 12px 14px; font-size: 14px; color: var(--amber); line-height: 1.35;
+    }
+    .clinic-banner.show { display: block; }
+    .clinic-banner strong { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+    .clinic-banner button {
+      margin-top: 8px; border: 0; background: 0; color: var(--blue-ios);
+      font: inherit; font-size: 15px; font-weight: 600; padding: 0; cursor: pointer;
+    }
+
+    .empty-state {
+      display: none; text-align: center; padding: 40px 20px; color: var(--muted);
+    }
+    .empty-state.show { display: block; }
+    .empty-state h3 { margin: 0 0 8px; font-size: 20px; color: var(--ink); font-weight: 600; }
+    .empty-state p { margin: 0; font-size: 15px; line-height: 1.4; }
+
+    /* Sticky action bar on builder */
+    .action-bar {
+      display: none; position: absolute; left: 0; right: 0; z-index: 18;
+      bottom: calc(var(--tab-h) + var(--safe-bottom));
+      padding: 12px 16px 10px;
+      background: linear-gradient(to top, rgba(242,242,247,0.98) 70%, transparent);
+    }
+    .app.no-tab .action-bar { bottom: var(--safe-bottom); padding-bottom: 12px; }
+    .action-bar.show { display: block; }
+    .action-bar .summary {
+      font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    .action-bar .btn-stack { display: flex; flex-direction: column; gap: 8px; }
+    .btn {
+      width: 100%; border: 0; border-radius: 12px; padding: 15px;
+      font-size: 17px; font-weight: 600; font-family: inherit; cursor: pointer;
+      letter-spacing: -0.02em;
+    }
+    .btn.primary { background: var(--blue); color: #fff; }
+    .btn.primary:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn.secondary {
+      background: var(--surface); color: var(--blue-ios);
+      box-shadow: 0 0 0 0.5px var(--line-strong);
+    }
+    .btn.row-pair { display: flex; gap: 8px; padding: 0; background: transparent; }
+    .btn.row-pair .btn { flex: 1; }
+
+    .check {
+      width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #c7c7cc;
+      display: grid; place-items: center; flex-shrink: 0; font-size: 12px; color: #fff;
+    }
+    .recipient.on .check { background: var(--blue); border-color: var(--blue); }
+
+    .field {
+      background: var(--surface); border-radius: var(--radius); padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .field input, .field textarea {
+      width: 100%; border: 0; font: inherit; font-size: 17px; outline: none;
+      background: transparent; resize: none;
+    }
+    .field textarea { min-height: 72px; }
+
+    .toggle {
+      width: 51px; height: 31px; border-radius: 999px; border: 0; background: #e9e9eb;
+      position: relative; cursor: pointer; flex-shrink: 0; padding: 0;
+    }
+    .toggle.on { background: var(--green); }
+    .toggle::after {
+      content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px;
+      border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: transform 0.15s;
+    }
+    .toggle.on::after { transform: translateX(20px); }
+
+    .sheet-bg {
+      display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.35);
+      z-index: 40; align-items: flex-end;
+    }
+    .sheet-bg.show { display: flex; }
+    .sheet {
+      width: 100%; background: var(--bg); border-radius: 16px 16px 0 0;
+      padding: 10px 16px calc(var(--safe-bottom) + 12px);
+    }
+    .sheet-handle {
+      width: 36px; height: 5px; border-radius: 99px; background: #c7c7cc;
+      margin: 4px auto 14px;
+    }
+    .sheet h3 { margin: 0 0 12px; font-size: 17px; text-align: center; font-weight: 600; }
+
+    .toast {
+      position: absolute; left: 50%; bottom: calc(var(--tab-h) + var(--safe-bottom) + 16px);
+      transform: translateX(-50%) translateY(20px); opacity: 0;
+      background: rgba(30, 30, 30, 0.92); color: #fff; border-radius: 12px;
+      padding: 12px 18px; font-size: 15px; font-weight: 500; z-index: 50;
+      pointer-events: none; transition: opacity 0.2s, transform 0.2s; max-width: 86%;
+      text-align: center;
+    }
+    .app.no-tab .toast { bottom: calc(var(--safe-bottom) + 24px); }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .email-done {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center; padding: 24px;
+    }
+    .email-done .badge {
+      width: 64px; height: 64px; border-radius: 50%; background: #e8f8ed; color: var(--green);
+      display: grid; place-items: center; font-size: 28px; margin-bottom: 16px;
+    }
+    .email-done h2 { margin: 0 0 8px; font-size: 22px; font-weight: 600; }
+    .email-done p { margin: 0 0 20px; font-size: 15px; color: var(--muted); line-height: 1.4; max-width: 260px; }
+
+    .chart-stub {
+      height: 100px; border-radius: 10px;
+      background: linear-gradient(180deg, #e8f4fc, #fff);
+      display: grid; place-items: center; color: var(--blue); font-size: 13px; font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .tabbar {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      height: calc(var(--tab-h) + var(--safe-bottom));
+      padding: 6px 0 var(--safe-bottom);
+      background: rgba(249, 249, 249, 0.94);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-top: 0.5px solid var(--line-strong);
+      display: flex; z-index: 20;
+    }
+    .tabbar button {
+      flex: 1; border: 0; background: 0; color: var(--muted); font-size: 10px; font-weight: 500;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      cursor: pointer; font-family: inherit; padding: 0;
+    }
+    .tabbar button.on { color: var(--blue); }
+    .tabbar button svg {
+      width: 24px; height: 24px; fill: none; stroke: currentColor;
+      stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    .side-col {
+      width: min(320px, 100%); display: flex; flex-direction: column; gap: 12px;
+      max-height: var(--phone-h);
+    }
+    .launcher, .inspector {
+      overflow-y: auto;
+      background: rgba(15, 23, 42, 0.55); border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 16px; padding: 14px; color: #e2e8f0;
+    }
+    .launcher { flex: 1; min-height: 0; }
+    .inspector { flex-shrink: 0; max-height: 280px; }
+    .launcher h3, .inspector h3 {
+      margin: 0 0 10px; font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #94a3b8;
+    }
+    .launcher .g { margin: 12px 0 6px; font-size: 11px; font-weight: 600; color: #7dd3fc; }
+    .launcher .g:first-of-type { margin-top: 0; }
+    .launcher button {
+      width: 100%; text-align: left; border: 1px solid rgba(148, 163, 184, 0.22);
+      background: rgba(30, 41, 59, 0.8); color: #f1f5f9; border-radius: 10px;
+      padding: 9px 11px; margin-bottom: 5px; cursor: pointer; font: inherit; font-size: 12px;
+    }
+    .launcher button.on {
+      border-color: rgba(56, 189, 248, 0.5);
+      background: rgba(14, 116, 144, 0.35);
+    }
+    .launcher button strong { display: block; font-size: 12px; }
+    .launcher button span { color: #94a3b8; font-size: 10px; line-height: 1.35; }
+    .launcher button code {
+      font-size: 9px; color: #67e8f9; font-weight: 600; letter-spacing: 0.02em;
+    }
+    .inspector pre {
+      margin: 0; font-size: 10px; line-height: 1.45; color: #cbd5e1;
+      white-space: pre-wrap; word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .inspector .legend {
+      margin-top: 10px; font-size: 10px; color: #94a3b8; line-height: 1.4;
+    }
+    .vs {
+      margin-top: 8px; font-size: 11px; color: #94a3b8; line-height: 1.4;
+    }
+    .vs a { color: #7dd3fc; }
+    @media (max-width: 720px) {
+      .side-col { max-height: none; width: min(390px, 100%); }
+      .launcher { max-height: 320px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="chrome">
+      <h1>Share — 10× variant</h1>
+      <p>QA / eng harness: every screen is jumpable; scenarios set data; ribbon + inspector show live state.</p>
+      <div class="pills">
+        <span>Scenario presets</span>
+        <span>Screen catalog</span>
+        <span>Live inspector</span>
+      </div>
+      <div class="scenario-block">
+        <h2>Scenarios (set data + land on key screen)</h2>
+        <div class="state-toggle" id="state-toggle">
+          <button type="button" class="on" data-state="ready"><b>S0 Ready</b><em>Home · data · DOB ok</em></button>
+          <button type="button" data-state="empty"><b>S1 No readings</b><em>Builder empty CTA</em></button>
+          <button type="button" data-state="clinic-dob"><b>S2 Clinic · DOB missing</b><em>Actions blocked</em></button>
+          <button type="button" data-state="clinic-ok"><b>S3 Clinic · ready</b><em>DOB filled</em></button>
+          <button type="button" data-state="history"><b>S4 From History</b><em>BP tab · tap Share</em></button>
+          <button type="button" data-state="history-prefill"><b>S5 History prefill</b><em>Builder after Share</em></button>
+          <button type="button" data-state="email"><b>S6 Email compose</b><em>Recipient selected</em></button>
+          <button type="button" data-state="email-none"><b>S7 Email · no recipient</b><em>Send disabled</em></button>
+          <button type="button" data-state="person"><b>S8 Person hub</b><em>Dr. Patel defaults</em></button>
+          <button type="button" data-state="person-email"><b>S9 Edit email</b><em>Save gated</em></button>
+          <button type="button" data-state="weekly-off"><b>S10 Weekly off</b><em>Person schedule off</em></button>
+          <button type="button" data-state="email-done"><b>S11 Email sent</b><em>Success only for email</em></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="phone"><div class="sw">
+        <div class="notch"></div>
+        <div class="status"><span>9:41</span><span>●●●● Wi‑Fi</span></div>
+
+        <div class="app" id="app">
+
+          <!-- SHARE TAB HOME -->
+          <section class="screen on" id="s-home" data-tab="1">
+            <div class="nav large"><div class="t">Share</div></div>
+            <div class="content">
+              <button type="button" class="primary-cta" data-go="builder" id="cta-share">
+                <span class="ic">↗</span>
+                <span>
+                  <strong>Share readings</strong>
+                  <span id="cta-sub">PDF · last 30 days · vitals with data</span>
+                </span>
+                <span class="chev">›</span>
+              </button>
+
+              <div class="group" style="margin-top:22px">
+                <button class="row with-ic" data-go="people">
+                  <span class="av">DP</span>
+                  <span class="meta">
+                    <span class="title">People</span>
+                    <span class="sub" id="people-sub">2 · 1 weekly email</span>
+                  </span>
+                  <span class="chev">›</span>
+                </button>
+                <button class="row with-ic" data-go="past">
+                  <span class="av g">◷</span>
+                  <span class="meta">
+                    <span class="title">Past shares</span>
+                    <span class="sub">Downloads &amp; emails</span>
+                  </span>
+                  <span class="chev">›</span>
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- HISTORY (tab) — Share deep-links into builder -->
+          <section class="screen" id="s-history-tab" data-tab="1">
+            <div class="nav">
+              <div class="t">Blood pressure</div>
+              <button type="button" class="link" id="history-share-btn">Share</button>
+            </div>
+            <div class="content">
+              <div class="context-pill">Mar 1 – Mar 31 · 128 readings</div>
+              <div class="group" style="padding:14px">
+                <div class="chart-stub">BP chart</div>
+                <div class="meta">
+                  <span class="title" style="font-size:20px;font-weight:600">132 / 84</span>
+                  <span class="sub">Today · 8:12 AM</span>
+                </div>
+              </div>
+              <div class="group" style="margin-top:14px">
+                <div class="row" style="cursor:default">
+                  <span class="meta"><span class="title">128 / 80</span><span class="sub">Yesterday · 7:55 AM</span></span>
+                </div>
+                <div class="row" style="cursor:default">
+                  <span class="meta"><span class="title">130 / 82</span><span class="sub">2 days ago · 8:01 AM</span></span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- THE ONE BUILDER -->
+          <section class="screen" id="s-builder">
+            <div class="nav">
+              <button type="button" class="back" data-go="home">
+                <svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Share
+              </button>
+              <div class="t">Share readings</div>
+            </div>
+            <div class="content">
+              <div class="context-pill" id="prefill-pill" hidden></div>
+
+              <div class="empty-state" id="empty-readings">
+                <h3>No readings to share</h3>
+                <p>Pair a device and take a measurement first.</p>
+              </div>
+
+              <div id="builder-body">
+                <div class="section-label" style="margin-top:0">Type</div>
+                <div class="seg" id="type-seg">
+                  <button type="button" class="on" data-type="simple">
+                    Simple
+                    <span class="badge">Table of readings</span>
+                  </button>
+                  <button type="button" data-type="clinic">
+                    For your doctor
+                    <span class="badge">Summary PDF</span>
+                  </button>
+                </div>
+
+                <div class="section-label">Readings</div>
+                <div class="group" id="vitals">
+                  <button type="button" class="vital on" data-vital="bp" data-count="128">
+                    <span class="box">✓</span>
+                    <span class="name">Blood pressure</span>
+                    <span class="count">128</span>
+                  </button>
+                  <button type="button" class="vital on" data-vital="weight" data-count="12">
+                    <span class="box">✓</span>
+                    <span class="name">Weight</span>
+                    <span class="count">12</span>
+                  </button>
+                  <button type="button" class="vital hidden" data-vital="sleep" data-count="0">
+                    <span class="box"></span>
+                    <span class="name">Sleep</span>
+                    <span class="count">0</span>
+                  </button>
+                  <button type="button" class="vital" data-vital="activity" data-count="30">
+                    <span class="box"></span>
+                    <span class="name">Activity</span>
+                    <span class="count">30</span>
+                  </button>
+                </div>
+
+                <div class="section-label">Period</div>
+                <div class="chips" id="period-chips">
+                  <button type="button" data-period="7">7 days</button>
+                  <button type="button" class="on" data-period="30">30 days</button>
+                  <button type="button" data-period="90">90 days</button>
+                  <button type="button" data-period="custom">Custom</button>
+                </div>
+                <p class="date-range" id="date-range">1 Mar 2026 – 31 Mar 2026</p>
+
+                <div class="section-label" id="format-label">Format</div>
+                <div class="chips" id="format-chips">
+                  <button type="button" class="on" data-format="pdf">PDF</button>
+                  <button type="button" data-format="csv">CSV</button>
+                  <button type="button" data-format="xls">Excel</button>
+                </div>
+
+                <div class="clinic-banner" id="clinic-banner">
+                  <strong>Date of birth needed</strong>
+                  Clinic summaries include DOB. Add it once.
+                  <button type="button" id="add-dob">Add date of birth</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- EMAIL: who + note + send (one screen, no separate review) -->
+          <section class="screen" id="s-email">
+            <div class="nav">
+              <button type="button" class="back" data-go="builder">
+                <svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Back
+              </button>
+              <div class="t">Email</div>
+            </div>
+            <div class="content">
+              <div class="context-pill" id="email-summary">Simple · PDF · 30 days</div>
+
+              <div class="section-label" style="margin-top:0">To</div>
+              <div class="group" id="recipient-list">
+                <button type="button" class="row recipient on" data-id="patel">
+                  <span class="check">✓</span>
+                  <span class="av">DP</span>
+                  <span class="meta">
+                    <span class="title">Dr. Patel</span>
+                    <span class="sub" id="email-row-patel-sub">dr.patel@clinic.com · Weekly</span>
+                  </span>
+                </button>
+                <button type="button" class="row recipient" data-id="sam">
+                  <span class="check"></span>
+                  <span class="av g">S</span>
+                  <span class="meta">
+                    <span class="title">Sam</span>
+                    <span class="sub">sam@email.com</span>
+                  </span>
+                </button>
+              </div>
+              <div class="group" style="margin-top:12px">
+                <button type="button" class="row" id="btn-new-person">
+                  <span class="av">＋</span>
+                  <span class="meta"><span class="title">Someone new</span><span class="sub">Email address</span></span>
+                  <span class="chev">›</span>
+                </button>
+              </div>
+
+              <div class="section-label">Note <span style="text-transform:none;letter-spacing:0;font-weight:400">(optional)</span></div>
+              <div class="field">
+                <textarea id="email-note" placeholder="Short note for the recipient"></textarea>
+              </div>
+
+              <div class="group">
+                <div class="row" style="cursor:default">
+                  <span class="meta">
+                    <span class="title">Also email weekly</span>
+                    <span class="sub">Uses this selection for the person</span>
+                  </span>
+                  <button type="button" class="toggle" id="weekly-toggle" aria-label="Weekly"></button>
+                </div>
+              </div>
+            </div>
+            <div class="action-bar show" style="bottom: var(--safe-bottom); padding-bottom: 12px;" id="email-footer">
+              <button type="button" class="btn primary" id="send-email" disabled>Send email</button>
+            </div>
+          </section>
+
+          <section class="screen" id="s-email-done">
+            <div class="email-done">
+              <div class="badge">✓</div>
+              <h2>Email sent</h2>
+              <p id="email-done-body">Your readings were emailed.</p>
+              <button type="button" class="btn primary" style="max-width:240px" data-go="home">Done</button>
+              <button type="button" class="btn secondary" style="max-width:240px;margin-top:8px" data-go="past">Past shares</button>
+            </div>
+          </section>
+
+          <!-- PEOPLE -->
+          <section class="screen" id="s-people">
+            <div class="nav">
+              <button type="button" class="back" data-go="home">
+                <svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Share
+              </button>
+              <div class="t">People</div>
+              <button type="button" class="link" id="people-add">＋</button>
+            </div>
+            <div class="content">
+              <div class="group">
+                <button type="button" class="row with-ic" data-go="person">
+                  <span class="av">DP</span>
+                  <span class="meta">
+                    <span class="title" id="people-patel-name">Dr. Patel</span>
+                    <span class="sub" id="people-patel-sub">Weekly · BP, weight</span>
+                  </span>
+                  <span class="chev">›</span>
+                </button>
+                <button type="button" class="row with-ic">
+                  <span class="av g">S</span>
+                  <span class="meta">
+                    <span class="title">Sam</span>
+                    <span class="sub">No schedule</span>
+                  </span>
+                  <span class="chev">›</span>
+                </button>
+              </div>
+              <p class="date-range" style="margin-top:12px">People are for email delivery — not a care-team social network.</p>
+            </div>
+          </section>
+
+          <section class="screen" id="s-person">
+            <div class="nav">
+              <button type="button" class="back" data-go="people">
+                <svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                People
+              </button>
+              <div class="t" id="person-title">Dr. Patel</div>
+            </div>
+            <div class="content">
+              <div class="group">
+                <button type="button" class="row" data-go="person-email">
+                  <span class="meta">
+                    <span class="title">Email</span>
+                    <span class="sub" id="person-email-sub">dr.patel@clinic.com</span>
+                  </span>
+                  <span class="chev">›</span>
+                </button>
+                <div class="row" style="cursor:default">
+                  <span class="meta"><span class="title">Weekly email</span></span>
+                  <button type="button" class="toggle on" id="person-weekly"></button>
+                </div>
+              </div>
+              <div class="section-label">Defaults for each send</div>
+              <div class="group">
+                <button type="button" class="row" data-go="person-type">
+                  <span class="meta">
+                    <span class="title">Type</span>
+                    <span class="sub" id="person-type-sub">Simple · table of readings</span>
+                  </span>
+                  <span class="chev">›</span>
+                </button>
+                <button type="button" class="row" data-go="person-readings">
+                  <span class="meta">
+                    <span class="title">Readings</span>
+                    <span class="sub" id="person-readings-sub">Blood pressure, Weight</span>
+                  </span>
+                  <span class="chev">›</span>
+                </button>
+                <button type="button" class="row" data-go="person-period">
+                  <span class="meta">
+                    <span class="title">Period</span>
+                    <span class="sub" id="person-period-hint">Each send uses this lookback</span>
+                  </span>
+                  <span class="val" id="person-period-val">30 days</span>
+                  <span class="chev">›</span>
+                </button>
+              </div>
+              <p class="date-range" id="person-next-hint" style="margin-top:12px">Next weekly send uses last 30 days of BP &amp; weight.</p>
+              <button type="button" class="btn primary" style="margin-top:22px" id="person-send-now">Send now</button>
+            </div>
+          </section>
+
+          <!-- Person → Email -->
+          <section class="screen" id="s-person-email">
+            <div class="nav">
+              <button type="button" class="back" id="person-email-cancel">
+                <svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Dr. Patel
+              </button>
+              <div class="t">Email</div>
+              <button type="button" class="link" id="person-email-save" disabled>Save</button>
+            </div>
+            <div class="content">
+              <div class="field">
+                <label for="person-email-input">Email address</label>
+                <input id="person-email-input" type="email" autocomplete="email" inputmode="email" placeholder="name@clinic.com" />
+              </div>
+              <p class="date-range" id="person-email-error" style="color:var(--red);display:none;margin-top:0">
+                Enter a valid email address.
+              </p>
+              <p class="date-range" id="person-email-weekly-note" style="margin-top:12px">
+                Scheduled emails will use this address.
+              </p>
+            </div>
+          </section>
+
+          <!-- Person → Readings (same pattern as builder vitals) -->
+          <section class="screen" id="s-person-readings">
+            <div class="nav">
+              <button type="button" class="back" data-go="person">
+                <svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Dr. Patel
+              </button>
+              <div class="t">Readings</div>
+              <button type="button" class="link" data-go="person">Done</button>
+            </div>
+            <div class="content">
+              <p class="date-range" style="margin:0 0 12px">Included in each email to this person. Same list as Share readings.</p>
+              <div class="group" id="person-vitals">
+                <button type="button" class="vital on" data-vital="bp" data-count="128">
+                  <span class="box">✓</span>
+                  <span class="name">Blood pressure</span>
+                  <span class="count">128</span>
+                </button>
+                <button type="button" class="vital on" data-vital="weight" data-count="12">
+                  <span class="box">✓</span>
+                  <span class="name">Weight</span>
+                  <span class="count">12</span>
+                </button>
+                <button type="button" class="vital" data-vital="activity" data-count="30">
+                  <span class="box"></span>
+                  <span class="name">Activity</span>
+                  <span class="count">30</span>
+                </button>
+                <button type="button" class="vital hidden" data-vital="sleep" data-count="0">
+                  <span class="box"></span>
+                  <span class="name">Sleep</span>
+                  <span class="count">0</span>
+                </button>
+              </div>
+              <p class="date-range" id="person-readings-error" style="color:var(--amber);display:none;margin-top:12px">
+                Choose at least one reading type.
+              </p>
+            </div>
+          </section>
+
+          <!-- Person → Period (same chips as builder) -->
+          <section class="screen" id="s-person-period">
+            <div class="nav">
+              <button type="button" class="back" data-go="person">
+                <svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Dr. Patel
+              </button>
+              <div class="t">Period</div>
+              <button type="button" class="link" data-go="person">Done</button>
+            </div>
+            <div class="content">
+              <p class="date-range" style="margin:0 0 12px">Each scheduled send includes this many days ending on the send date.</p>
+              <div class="chips" id="person-period-chips">
+                <button type="button" data-period="7">7 days</button>
+                <button type="button" class="on" data-period="30">30 days</button>
+                <button type="button" data-period="90">90 days</button>
+                <button type="button" data-period="custom">Custom</button>
+              </div>
+              <p class="date-range" id="person-period-range" style="margin-top:14px">Example if sent today: 1 Mar 2026 – 31 Mar 2026</p>
+              <div class="group" style="margin-top:22px">
+                <div class="row" style="cursor:default;align-items:flex-start">
+                  <span class="meta">
+                    <span class="title">How this works</span>
+                    <span class="sub" style="white-space:normal;margin-top:6px;line-height:1.4">
+                      Weekly email on Monday will attach the last 30 days of selected readings — not a fixed calendar month unless you choose Custom.
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Person → Type -->
+          <section class="screen" id="s-person-type">
+            <div class="nav">
+              <button type="button" class="back" data-go="person">
+                <svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Dr. Patel
+              </button>
+              <div class="t">Type</div>
+              <button type="button" class="link" data-go="person">Done</button>
+            </div>
+            <div class="content">
+              <div class="seg" id="person-type-seg">
+                <button type="button" class="on" data-type="simple">
+                  Simple
+                  <span class="badge">Table of readings</span>
+                </button>
+                <button type="button" data-type="clinic">
+                  For your doctor
+                  <span class="badge">Summary PDF</span>
+                </button>
+              </div>
+              <p class="date-range" style="margin-top:14px">Used for scheduled emails and as the starting default when you tap Send now.</p>
+            </div>
+          </section>
+
+          <!-- PAST SHARES -->
+          <section class="screen" id="s-past">
+            <div class="nav">
+              <button type="button" class="back" data-go="home">
+                <svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Share
+              </button>
+              <div class="t">Past shares</div>
+            </div>
+            <div class="content">
+              <div class="group">
+                <div class="row" style="cursor:default">
+                  <span class="meta">
+                    <span class="title">Saved to Files</span>
+                    <span class="sub">Today · PDF · BP, weight · 30 days</span>
+                  </span>
+                </div>
+                <div class="row" style="cursor:default">
+                  <span class="meta">
+                    <span class="title">Emailed Dr. Patel</span>
+                    <span class="sub">12 Mar · PDF · Weekly</span>
+                  </span>
+                </div>
+                <div class="row" style="cursor:default">
+                  <span class="meta">
+                    <span class="title">Shared…</span>
+                    <span class="sub">10 Mar · system share sheet</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Minimal other tabs -->
+          <section class="screen" id="s-dash" data-tab="1">
+            <div class="nav large"><div class="t">Home</div></div>
+            <div class="content">
+              <div class="group">
+                <div class="row" style="cursor:default">
+                  <span class="meta"><span class="title">BP · 132 / 84</span><span class="sub">Today</span></span>
+                </div>
+              </div>
+              <p class="date-range" style="margin-top:12px">Share is the tab — not a Profile mall item.</p>
+            </div>
+          </section>
+
+          <section class="screen" id="s-profile" data-tab="1">
+            <div class="nav large"><div class="t">Profile</div></div>
+            <div class="content">
+              <div class="group">
+                <div class="row" style="cursor:default">
+                  <span class="meta"><span class="title">Settings</span><span class="sub">No Share entry here</span></span>
+                  <span class="chev">›</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Action bar for builder -->
+          <div class="action-bar" id="builder-actions">
+            <div class="summary" id="action-summary">Blood pressure, Weight · 30 days · PDF</div>
+            <div class="btn-stack">
+              <button type="button" class="btn primary" id="btn-save">Save to Files</button>
+              <div class="btn row-pair">
+                <button type="button" class="btn secondary" id="btn-email">Email</button>
+                <button type="button" class="btn secondary" id="btn-share">Share…</button>
+              </div>
+            </div>
+          </div>
+
+          <nav class="tabbar" id="tabbar">
+            <button type="button" data-tab="dash">
+              <svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9z"/></svg>
+              Home
+            </button>
+            <button type="button" data-tab="history-tab">
+              <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+              History
+            </button>
+            <button type="button" class="on" data-tab="home">
+              <svg viewBox="0 0 24 24"><path d="M8 12h12M14 6l6 6-6 6"/><path d="M4 6v12"/></svg>
+              Share
+            </button>
+            <button type="button" data-tab="profile">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 19c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>
+              Profile
+            </button>
+          </nav>
+        </div>
+
+        <div class="sheet-bg" id="sheet">
+          <div class="sheet">
+            <div class="sheet-handle"></div>
+            <h3>New person</h3>
+            <div class="field">
+              <label>Name</label>
+              <input id="np-name" type="text" placeholder="e.g. Dr. Lee" />
+            </div>
+            <div class="field">
+              <label>Email</label>
+              <input id="np-email" type="email" placeholder="name@clinic.com" />
+            </div>
+            <button type="button" class="btn primary" id="np-add">Add</button>
+            <button type="button" class="btn secondary" id="np-cancel" style="margin-top:8px">Cancel</button>
+          </div>
+        </div>
+
+        <div class="toast" id="toast"></div>
+        <div class="home-ind"></div>
+      </div></div>
+
+      <div class="side-col">
+        <aside class="inspector">
+          <h3>Live state (for eng)</h3>
+          <pre id="inspector-pre">—</pre>
+          <p class="legend">Screen id + scenario live here (outside the phone). Not shipping UI.</p>
+        </aside>
+        <aside class="launcher" id="launcher">
+          <h3>Screen catalog</h3>
+          <div class="g">Tabs</div>
+          <button type="button" data-go="home" data-screen="home"><code>S-00</code> <strong>Share home</strong><span>Primary CTA · People · Past shares</span></button>
+          <button type="button" data-go="history-tab" data-screen="history-tab"><code>S-01</code> <strong>History · BP</strong><span>Tap Share → zero-detour builder</span></button>
+          <button type="button" data-go="dash" data-screen="dash"><code>S-02</code> <strong>Home tab</strong><span>Placeholder · Share not here</span></button>
+          <button type="button" data-go="profile" data-screen="profile"><code>S-03</code> <strong>Profile tab</strong><span>No Share mall entry</span></button>
+          <div class="g">Share pipe</div>
+          <button type="button" data-go="builder" data-screen="builder"><code>S-10</code> <strong>Builder</strong><span>Type · readings · period · format · Save/Email/Share</span></button>
+          <button type="button" data-go="email" data-screen="email"><code>S-11</code> <strong>Email</strong><span>To · note · weekly · Send</span></button>
+          <button type="button" data-go="email-done" data-screen="email-done"><code>S-12</code> <strong>Email sent</strong><span>Only success screen (not for Files)</span></button>
+          <button type="button" data-go="past" data-screen="past"><code>S-13</code> <strong>Past shares</strong><span>Download / email / Share… log</span></button>
+          <div class="g">People</div>
+          <button type="button" data-go="people" data-screen="people"><code>S-20</code> <strong>People list</strong><span>Email address book</span></button>
+          <button type="button" data-go="person" data-screen="person"><code>S-21</code> <strong>Person hub</strong><span>Email · weekly · defaults · Send now</span></button>
+          <button type="button" data-go="person-email" data-screen="person-email"><code>S-22</code> <strong>Edit email</strong><span>Validate · Save · cancel reverts</span></button>
+          <button type="button" data-go="person-type" data-screen="person-type"><code>S-23</code> <strong>Person · Type</strong><span>Simple vs For your doctor</span></button>
+          <button type="button" data-go="person-readings" data-screen="person-readings"><code>S-24</code> <strong>Person · Readings</strong><span>Multi-select vitals defaults</span></button>
+          <button type="button" data-go="person-period" data-screen="person-period"><code>S-25</code> <strong>Person · Period</strong><span>Lookback chips for schedule</span></button>
+          <div class="vs">
+            Overlay sheets: <strong>New person</strong> (name + email) via ＋ on People or Email.<br /><br />
+            Original wizard:<br />
+            <a href="../share-readings-prototype/index.html">share-readings-prototype</a><br /><br />
+            Spec: <code>README.md</code> in this folder.
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const periods = {
+      7: "25 Mar 2026 – 31 Mar 2026",
+      30: "1 Mar 2026 – 31 Mar 2026",
+      90: "1 Jan 2026 – 31 Mar 2026",
+      custom: "Pick dates…",
+    };
+
+    const VITAL_NAMES = { bp: "Blood pressure", weight: "Weight", activity: "Activity", sleep: "Sleep" };
+    const PERIOD_LABELS = { 7: "7 days", 30: "30 days", 90: "90 days", custom: "Custom" };
+
+    /** Catalog for testers/devs — keep in sync with screens */
+    const SCREENS = {
+      home:            { id: "S-00", name: "Share home", what: "Primary Share readings CTA + People + Past shares" },
+      "history-tab":   { id: "S-01", name: "History · BP", what: "Nav Share jumps to builder prefilled (no hub)" },
+      dash:            { id: "S-02", name: "Home tab", what: "Placeholder — Share is not on Profile mall" },
+      profile:         { id: "S-03", name: "Profile tab", what: "No Share / Care Team / Premium peers" },
+      builder:         { id: "S-10", name: "Builder", what: "One screen: type, vitals, period, format + Save/Email/Share…" },
+      email:           { id: "S-11", name: "Email", what: "Recipients, note, weekly toggle, Send (disabled if none)" },
+      "email-done":    { id: "S-12", name: "Email sent", what: "Only full success UI — Files uses toast" },
+      past:            { id: "S-13", name: "Past shares", what: "Unified history of deliveries" },
+      people:          { id: "S-20", name: "People list", what: "Email address book entry" },
+      person:          { id: "S-21", name: "Person hub", what: "Email, weekly, Type/Readings/Period defaults, Send now" },
+      "person-email":  { id: "S-22", name: "Edit email", what: "Validate + Save; cancel discards draft" },
+      "person-type":   { id: "S-23", name: "Person · Type", what: "Simple vs For your doctor default" },
+      "person-readings":{ id: "S-24", name: "Person · Readings", what: "Multi-select vitals for schedule/send defaults" },
+      "person-period": { id: "S-25", name: "Person · Period", what: "Lookback chips; weekly uses last N days" },
+    };
+
+    const SCENARIO_LABELS = {
+      ready: "S0 Ready",
+      empty: "S1 No readings",
+      "clinic-dob": "S2 Clinic · DOB missing",
+      "clinic-ok": "S3 Clinic · ready",
+      history: "S4 From History",
+      "history-prefill": "S5 History prefill",
+      email: "S6 Email compose",
+      "email-none": "S7 Email · no recipient",
+      person: "S8 Person hub",
+      "person-email": "S9 Edit email",
+      "weekly-off": "S10 Weekly off",
+      "email-done": "S11 Email sent",
+      free: "Free navigation",
+    };
+
+    const state = {
+      screen: "home",
+      scenario: "ready",
+      type: "simple",
+      period: "30",
+      format: "pdf",
+      vitals: { bp: true, weight: true, activity: false, sleep: false },
+      counts: { bp: 128, weight: 12, activity: 30, sleep: 0 },
+      dob: true,
+      prefill: null,
+      empty: false,
+      recipients: new Set(["patel"]),
+      person: {
+        name: "Dr. Patel",
+        email: "dr.patel@clinic.com",
+        type: "simple",
+        period: "30",
+        vitals: { bp: true, weight: true, activity: false, sleep: false },
+        weekly: true,
+      },
+      emailDraft: "",
+    };
+
+    const tabRoots = new Set(["home", "history-tab", "dash", "profile"]);
+
+    function updateInspector() {
+      const meta = SCREENS[state.screen] || { id: "?", name: state.screen, what: "" };
+      const needDob = state.type === "clinic" && !state.dob;
+      const vitalsOn = Object.keys(state.vitals).filter(k => state.vitals[k] && state.counts[k] > 0);
+      const actionsBlocked = state.empty || vitalsOn.length === 0 || needDob;
+      const flags = [
+        state.empty ? "empty" : null,
+        needDob ? "needDOB" : null,
+        state.prefill ? "prefill" : null,
+        actionsBlocked && state.screen === "builder" ? "actionsBlocked" : null,
+        state.recipients.size === 0 ? "noRecipient" : null,
+        !state.person.weekly ? "weeklyOff" : null,
+      ].filter(Boolean).join(" · ") || "ok";
+
+      document.querySelectorAll("#launcher [data-screen]").forEach(b => {
+        b.classList.toggle("on", b.dataset.screen === state.screen);
+      });
+
+      const pre = document.getElementById("inspector-pre");
+      if (!pre) return;
+      pre.textContent = [
+        `screen:     ${meta.id}  ${state.screen}`,
+        `name:       ${meta.name}`,
+        `purpose:    ${meta.what}`,
+        `scenario:   ${SCENARIO_LABELS[state.scenario] || state.scenario}`,
+        `flags:      ${flags}`,
+        ``,
+        `type:       ${state.type}`,
+        `period:     ${state.period}`,
+        `format:     ${state.format}`,
+        `vitals:     ${vitalsOn.join(",") || "(none)"}`,
+        `counts:     bp=${state.counts.bp} wt=${state.counts.weight} act=${state.counts.activity}`,
+        `empty:      ${state.empty}`,
+        `dob:        ${state.dob}`,
+        `prefill:    ${state.prefill || "—"}`,
+        `actions:    ${actionsBlocked ? "BLOCKED" : "enabled"} (builder)`,
+        ``,
+        `recipients: ${[...state.recipients].join(",") || "(none)"}`,
+        `person:     ${state.person.name} <${state.person.email}>`,
+        `  weekly:   ${state.person.weekly}`,
+        `  type:     ${state.person.type}`,
+        `  period:   ${state.person.period}`,
+        `  vitals:   ${Object.keys(state.person.vitals).filter(k => state.person.vitals[k]).join(",")}`,
+      ].join("\n");
+    }
+
+    function isValidEmail(s) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((s || "").trim());
+    }
+
+    function shortEmail(s) {
+      const e = (s || "").trim();
+      if (e.length <= 22) return e;
+      const at = e.indexOf("@");
+      if (at < 1) return e.slice(0, 18) + "…";
+      return e.slice(0, Math.min(at, 10)) + "…@" + e.slice(at + 1);
+    }
+
+    function toast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.remove("show"), 2200);
+    }
+
+    function selectedVitals() {
+      return Object.keys(state.vitals).filter(k => state.vitals[k] && state.counts[k] > 0);
+    }
+
+    function vitalLabels(from) {
+      const src = from || state.vitals;
+      return Object.keys(src).filter(k => src[k] && (state.counts[k] || 0) > 0).map(k => VITAL_NAMES[k]);
+    }
+
+    function personVitalLabels() {
+      return vitalLabels(state.person.vitals);
+    }
+
+    function syncPersonHub() {
+      const labels = personVitalLabels();
+      const readingsSub = labels.length ? labels.join(", ") : "None selected";
+      document.getElementById("person-readings-sub").textContent = readingsSub;
+      document.getElementById("person-period-val").textContent = PERIOD_LABELS[state.person.period] || "30 days";
+      document.getElementById("person-type-sub").textContent =
+        state.person.type === "clinic" ? "For your doctor · summary PDF" : "Simple · table of readings";
+      document.getElementById("person-email-sub").textContent = state.person.email;
+      document.getElementById("person-title").textContent = state.person.name;
+
+      const p = PERIOD_LABELS[state.person.period] || "30 days";
+      const shortV = labels.length
+        ? labels.map(l => l === "Blood pressure" ? "BP" : l.toLowerCase()).join(" & ")
+        : "readings";
+      document.getElementById("person-next-hint").textContent = state.person.weekly
+        ? `Next weekly send uses last ${p.replace(" days", "")} days of ${shortV}.`
+        : `Send now will use ${shortV} · ${p}.`;
+
+      // People list
+      const peopleName = document.getElementById("people-patel-name");
+      const peopleSub = document.getElementById("people-patel-sub");
+      if (peopleName) peopleName.textContent = state.person.name;
+      if (peopleSub) {
+        const sched = state.person.weekly ? "Weekly" : "No schedule";
+        peopleSub.textContent = `${sched} · ${labels.length ? labels.map(l => l === "Blood pressure" ? "BP" : l.toLowerCase()).join(", ") : "no readings"}`;
+      }
+
+      // Email picker row (Share → Email)
+      const emailSub = document.getElementById("email-row-patel-sub");
+      if (emailSub) {
+        emailSub.textContent = `${state.person.email}${state.person.weekly ? " · Weekly" : ""}`;
+      }
+
+      // Weekly note on email edit screen
+      const note = document.getElementById("person-email-weekly-note");
+      if (note) {
+        note.textContent = state.person.weekly
+          ? "Scheduled emails will use this address."
+          : "This address is used when you email this person.";
+      }
+      updateInspector();
+    }
+
+    function syncPersonEmail() {
+      const input = document.getElementById("person-email-input");
+      if (document.activeElement !== input) {
+        input.value = state.emailDraft !== "" ? state.emailDraft : state.person.email;
+      }
+      const val = input.value.trim();
+      const valid = isValidEmail(val);
+      const changed = val.toLowerCase() !== state.person.email.toLowerCase();
+      document.getElementById("person-email-save").disabled = !valid || !changed;
+      document.getElementById("person-email-error").style.display =
+        val.length > 0 && !valid ? "block" : "none";
+    }
+
+    function syncPersonReadings() {
+      document.querySelectorAll("#person-vitals .vital").forEach(btn => {
+        const k = btn.dataset.vital;
+        const count = state.counts[k] || 0;
+        btn.querySelector(".count").textContent = count;
+        btn.classList.toggle("hidden", count === 0 && k === "sleep");
+        if (count === 0) state.person.vitals[k] = false;
+        const on = !!state.person.vitals[k];
+        btn.classList.toggle("on", on);
+        btn.querySelector(".box").textContent = on ? "✓" : "";
+      });
+      const none = personVitalLabels().length === 0;
+      document.getElementById("person-readings-error").style.display = none ? "block" : "none";
+      syncPersonHub();
+    }
+
+    function syncPersonPeriod() {
+      document.querySelectorAll("#person-period-chips button").forEach(b => {
+        b.classList.toggle("on", b.dataset.period === state.person.period);
+      });
+      const range = periods[state.person.period] || periods["30"];
+      document.getElementById("person-period-range").textContent =
+        state.person.period === "custom"
+          ? "Custom range would open a date picker."
+          : `Example if sent today: ${range}`;
+      syncPersonHub();
+    }
+
+    function syncPersonType() {
+      document.querySelectorAll("#person-type-seg button").forEach(b => {
+        b.classList.toggle("on", b.dataset.type === state.person.type);
+      });
+      syncPersonHub();
+    }
+
+    function formatLabel() {
+      return state.type === "clinic" ? "PDF" : state.format.toUpperCase() === "XLS" ? "Excel" : state.format.toUpperCase();
+    }
+
+    function fileName() {
+      return `OMRON_readings_${state.period}d.${state.type === "clinic" ? "pdf" : state.format === "xls" ? "xlsx" : state.format}`;
+    }
+
+    function summaryLine() {
+      const v = vitalLabels();
+      if (!v.length) return "Select at least one reading type";
+      const type = state.type === "clinic" ? "For your doctor" : "Simple";
+      return `${v.join(", ")} · ${state.period === "custom" ? "Custom" : state.period + " days"} · ${formatLabel()} · ${type}`;
+    }
+
+    function go(id) {
+      state.screen = id;
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("on"));
+      const el = document.getElementById("s-" + id) || document.getElementById("s-home");
+      el.classList.add("on");
+
+      const app = document.getElementById("app");
+      const isTab = tabRoots.has(id);
+      app.classList.toggle("no-tab", !isTab);
+      app.classList.toggle("has-footer", id === "builder" && !state.empty);
+
+      document.getElementById("builder-actions").classList.toggle("show", id === "builder" && !state.empty);
+
+      // email footer only on email
+      document.getElementById("email-footer").style.display = id === "email" ? "block" : "none";
+      if (id === "email") {
+        app.classList.add("no-tab");
+        app.classList.add("has-footer");
+        document.getElementById("builder-actions").classList.remove("show");
+      }
+
+      // tab highlight
+      const tabMap = {
+        home: "home", builder: "home", email: "home", "email-done": "home",
+        people: "home", person: "home", "person-email": "home", "person-readings": "home",
+        "person-period": "home", "person-type": "home",
+        past: "home", "history-tab": "history-tab", dash: "dash", profile: "profile",
+      };
+      document.querySelectorAll("#tabbar button").forEach(b => {
+        b.classList.toggle("on", b.dataset.tab === (tabMap[id] || "home"));
+      });
+
+      const content = el.querySelector(".content");
+      if (content) content.scrollTop = 0;
+
+      if (id === "builder") syncBuilder();
+      if (id === "email") syncEmail();
+      if (id === "person") syncPersonHub();
+      if (id === "person-email") {
+        state.emailDraft = state.person.email;
+        const input = document.getElementById("person-email-input");
+        input.value = state.person.email;
+        syncPersonEmail();
+        setTimeout(() => input.focus(), 50);
+      }
+      if (id === "person-readings") syncPersonReadings();
+      if (id === "person-period") syncPersonPeriod();
+      if (id === "person-type") syncPersonType();
+      updateInspector();
+    }
+
+    function syncBuilder() {
+      // type
+      document.querySelectorAll("#type-seg button").forEach(b => {
+        b.classList.toggle("on", b.dataset.type === state.type);
+      });
+
+      // vitals
+      document.querySelectorAll("#vitals .vital").forEach(btn => {
+        const k = btn.dataset.vital;
+        const count = state.counts[k] || 0;
+        btn.dataset.count = count;
+        btn.querySelector(".count").textContent = count;
+        const show = count > 0 || k === "activity"; // hide zero sleep
+        btn.classList.toggle("hidden", count === 0 && k === "sleep");
+        if (count === 0) state.vitals[k] = false;
+        btn.classList.toggle("on", !!state.vitals[k]);
+        btn.querySelector(".box").textContent = state.vitals[k] ? "✓" : "";
+      });
+
+      // period
+      document.querySelectorAll("#period-chips button").forEach(b => {
+        b.classList.toggle("on", b.dataset.period === state.period);
+      });
+      document.getElementById("date-range").textContent = periods[state.period] || periods["30"];
+
+      // format — hide for clinic
+      const showFmt = state.type === "simple";
+      document.getElementById("format-label").style.display = showFmt ? "" : "none";
+      document.getElementById("format-chips").style.display = showFmt ? "flex" : "none";
+      document.querySelectorAll("#format-chips button").forEach(b => {
+        b.classList.toggle("on", b.dataset.format === state.format);
+      });
+
+      // clinic DOB
+      const needDob = state.type === "clinic" && !state.dob;
+      document.getElementById("clinic-banner").classList.toggle("show", needDob);
+
+      // empty
+      document.getElementById("empty-readings").classList.toggle("show", state.empty);
+      document.getElementById("builder-body").style.display = state.empty ? "none" : "";
+      document.getElementById("builder-actions").classList.toggle("show", state.screen === "builder" && !state.empty);
+      document.getElementById("app").classList.toggle("has-footer", state.screen === "builder" && !state.empty);
+
+      // prefill pill
+      const pill = document.getElementById("prefill-pill");
+      if (state.prefill) {
+        pill.hidden = false;
+        pill.textContent = state.prefill;
+        pill.classList.toggle("warn", false);
+      } else {
+        pill.hidden = true;
+      }
+
+      // actions enabled
+      const hasVitals = selectedVitals().length > 0;
+      const blocked = state.empty || !hasVitals || needDob;
+      document.getElementById("btn-save").disabled = blocked;
+      document.getElementById("btn-email").disabled = blocked;
+      document.getElementById("btn-share").disabled = blocked;
+      document.getElementById("action-summary").textContent = summaryLine();
+
+      // home CTA sub
+      document.getElementById("cta-sub").textContent = state.empty
+        ? "No readings yet"
+        : `${formatLabel()} · last ${state.period} days · vitals with data`;
+
+      updateInspector();
+    }
+
+    function syncEmail() {
+      document.getElementById("email-summary").textContent = summaryLine();
+      document.querySelectorAll("#recipient-list .recipient").forEach(r => {
+        const on = state.recipients.has(r.dataset.id);
+        r.classList.toggle("on", on);
+        r.querySelector(".check").textContent = on ? "✓" : "";
+      });
+      document.getElementById("send-email").disabled = state.recipients.size === 0;
+      updateInspector();
+    }
+
+    // Navigation
+    document.body.addEventListener("click", e => {
+      const goEl = e.target.closest("[data-go]");
+      if (goEl && !goEl.closest("#type-seg") && !goEl.closest("#person-type-seg") && !goEl.closest(".vital") && !goEl.closest(".chips") && !goEl.closest(".recipient") && !goEl.closest("#state-toggle")) {
+        const id = goEl.dataset.go;
+        if (goEl.closest("#launcher")) state.scenario = "free";
+        go(id);
+        return;
+      }
+    });
+
+    document.getElementById("tabbar").addEventListener("click", e => {
+      const b = e.target.closest("[data-tab]");
+      if (!b) return;
+      state.prefill = null;
+      go(b.dataset.tab);
+    });
+
+    document.getElementById("history-share-btn").addEventListener("click", () => {
+      // ZERO DETOUR: straight to builder with prefill
+      state.prefill = "Blood pressure · Mar 1–31";
+      state.type = "simple";
+      state.period = "30";
+      state.format = "pdf";
+      state.vitals = { bp: true, weight: false, activity: false, sleep: false };
+      state.empty = false;
+      state.dob = true;
+      go("builder");
+    });
+
+    document.getElementById("person-send-now").addEventListener("click", () => {
+      state.prefill = "Dr. Patel · defaults";
+      state.type = state.person.type;
+      state.period = state.person.period;
+      state.format = "pdf";
+      state.vitals = { ...state.person.vitals };
+      state.empty = false;
+      go("builder");
+    });
+
+    // Person defaults editors
+    document.getElementById("person-vitals").addEventListener("click", e => {
+      const b = e.target.closest(".vital");
+      if (!b || b.classList.contains("hidden")) return;
+      const k = b.dataset.vital;
+      if ((state.counts[k] || 0) === 0) return;
+      state.person.vitals[k] = !state.person.vitals[k];
+      // Keep at least one selected
+      if (personVitalLabels().length === 0) {
+        state.person.vitals[k] = true;
+        toast("Keep at least one reading");
+      }
+      syncPersonReadings();
+    });
+
+    document.getElementById("person-period-chips").addEventListener("click", e => {
+      const b = e.target.closest("[data-period]");
+      if (!b) return;
+      state.person.period = b.dataset.period;
+      if (state.person.period === "custom") toast("Date picker would open");
+      syncPersonPeriod();
+    });
+
+    document.getElementById("person-type-seg").addEventListener("click", e => {
+      const b = e.target.closest("[data-type]");
+      if (!b) return;
+      state.person.type = b.dataset.type;
+      syncPersonType();
+    });
+
+    // Person email edit
+    document.getElementById("person-email-input").addEventListener("input", () => {
+      state.emailDraft = document.getElementById("person-email-input").value;
+      syncPersonEmail();
+    });
+    document.getElementById("person-email-input").addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        document.getElementById("person-email-save").click();
+      }
+    });
+    document.getElementById("person-email-save").addEventListener("click", () => {
+      const val = document.getElementById("person-email-input").value.trim();
+      if (!isValidEmail(val)) {
+        syncPersonEmail();
+        return;
+      }
+      state.person.email = val;
+      state.emailDraft = "";
+      toast("Email updated");
+      syncPersonHub();
+      go("person");
+    });
+    document.getElementById("person-email-cancel").addEventListener("click", () => {
+      state.emailDraft = "";
+      go("person");
+    });
+
+    // Builder controls
+    document.getElementById("type-seg").addEventListener("click", e => {
+      const b = e.target.closest("[data-type]");
+      if (!b) return;
+      state.type = b.dataset.type;
+      if (state.type === "clinic") state.format = "pdf";
+      syncBuilder();
+    });
+
+    document.getElementById("vitals").addEventListener("click", e => {
+      const b = e.target.closest(".vital");
+      if (!b || b.classList.contains("hidden")) return;
+      const k = b.dataset.vital;
+      if ((state.counts[k] || 0) === 0) return;
+      state.vitals[k] = !state.vitals[k];
+      syncBuilder();
+    });
+
+    document.getElementById("period-chips").addEventListener("click", e => {
+      const b = e.target.closest("[data-period]");
+      if (!b) return;
+      state.period = b.dataset.period;
+      if (state.period === "custom") toast("Date picker would open");
+      syncBuilder();
+    });
+
+    document.getElementById("format-chips").addEventListener("click", e => {
+      const b = e.target.closest("[data-format]");
+      if (!b) return;
+      state.format = b.dataset.format;
+      syncBuilder();
+    });
+
+    document.getElementById("add-dob").addEventListener("click", () => {
+      state.dob = true;
+      toast("Date of birth added");
+      syncBuilder();
+    });
+
+    // Delivery actions — no intermediate How screen
+    document.getElementById("btn-save").addEventListener("click", () => {
+      toast(`Saved to Files · ${fileName()}`);
+      // Stay near job; optional return home after beat
+      setTimeout(() => go("home"), 900);
+    });
+
+    document.getElementById("btn-share").addEventListener("click", () => {
+      toast("System share sheet · AirDrop, Messages…");
+      setTimeout(() => go("home"), 900);
+    });
+
+    document.getElementById("btn-email").addEventListener("click", () => {
+      go("email");
+    });
+
+    // Recipients
+    document.getElementById("recipient-list").addEventListener("click", e => {
+      const r = e.target.closest(".recipient");
+      if (!r) return;
+      const id = r.dataset.id;
+      if (state.recipients.has(id)) state.recipients.delete(id);
+      else state.recipients.add(id);
+      syncEmail();
+    });
+
+    document.getElementById("weekly-toggle").addEventListener("click", function () {
+      this.classList.toggle("on");
+    });
+    document.getElementById("person-weekly").addEventListener("click", function () {
+      this.classList.toggle("on");
+      state.person.weekly = this.classList.contains("on");
+      syncPersonHub();
+    });
+
+    document.getElementById("send-email").addEventListener("click", () => {
+      const names = [];
+      if (state.recipients.has("patel")) names.push("Dr. Patel");
+      if (state.recipients.has("sam")) names.push("Sam");
+      document.getElementById("email-done-body").textContent =
+        `Sent to ${names.join(" · ") || "recipient"}.`;
+      go("email-done");
+    });
+
+    // New person sheet
+    function openSheet() { document.getElementById("sheet").classList.add("show"); }
+    function closeSheet() { document.getElementById("sheet").classList.remove("show"); }
+    document.getElementById("btn-new-person").addEventListener("click", openSheet);
+    document.getElementById("people-add").addEventListener("click", openSheet);
+    document.getElementById("np-cancel").addEventListener("click", closeSheet);
+    document.getElementById("sheet").addEventListener("click", e => {
+      if (e.target.id === "sheet") closeSheet();
+    });
+    document.getElementById("np-add").addEventListener("click", () => {
+      toast("Person added (demo)");
+      closeSheet();
+    });
+
+    function resetBaseData() {
+      state.empty = false;
+      state.dob = true;
+      state.prefill = null;
+      state.type = "simple";
+      state.period = "30";
+      state.format = "pdf";
+      state.vitals = { bp: true, weight: true, activity: false, sleep: false };
+      state.counts = { bp: 128, weight: 12, activity: 30, sleep: 0 };
+      state.recipients = new Set(["patel"]);
+      state.person = {
+        name: "Dr. Patel",
+        email: "dr.patel@clinic.com",
+        type: "simple",
+        period: "30",
+        vitals: { bp: true, weight: true, activity: false, sleep: false },
+        weekly: true,
+      };
+      state.emailDraft = "";
+      document.getElementById("person-weekly").classList.add("on");
+    }
+
+    // Demo scenarios — each lands on the screen under test with explicit data
+    function applyDemo(name) {
+      state.scenario = name;
+      document.querySelectorAll("#state-toggle button").forEach(b => {
+        b.classList.toggle("on", b.dataset.state === name);
+      });
+      resetBaseData();
+
+      switch (name) {
+        case "ready":
+          go("home");
+          break;
+        case "empty":
+          state.empty = true;
+          state.counts = { bp: 0, weight: 0, activity: 0, sleep: 0 };
+          state.vitals = { bp: false, weight: false, activity: false, sleep: false };
+          go("builder");
+          break;
+        case "clinic-dob":
+          state.type = "clinic";
+          state.dob = false;
+          go("builder");
+          break;
+        case "clinic-ok":
+          state.type = "clinic";
+          state.dob = true;
+          go("builder");
+          break;
+        case "history":
+          go("history-tab");
+          break;
+        case "history-prefill":
+          state.prefill = "Blood pressure · Mar 1–31";
+          state.vitals = { bp: true, weight: false, activity: false, sleep: false };
+          go("builder");
+          break;
+        case "email":
+          state.recipients = new Set(["patel"]);
+          go("email");
+          break;
+        case "email-none":
+          state.recipients = new Set();
+          go("email");
+          break;
+        case "person":
+          go("person");
+          break;
+        case "person-email":
+          go("person-email");
+          break;
+        case "weekly-off":
+          state.person.weekly = false;
+          document.getElementById("person-weekly").classList.remove("on");
+          go("person");
+          break;
+        case "email-done":
+          document.getElementById("email-done-body").textContent = "Sent to Dr. Patel (scenario S11).";
+          go("email-done");
+          break;
+        default:
+          go("home");
+      }
+    }
+
+    document.getElementById("state-toggle").addEventListener("click", e => {
+      const b = e.target.closest("[data-state]");
+      if (!b) return;
+      applyDemo(b.dataset.state);
+    });
+
+    // Init
+    syncBuilder();
+    syncPersonHub();
+    applyDemo("ready");
+  </script>
+</body>
+</html>
