@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Devices 10× — closed loop physics</title>
+  <style>
+    :root {
+      --bg:#f2f2f7; --surface:#fff; --ink:#000; --muted:#8e8e93;
+      --line:rgba(60,60,67,.29); --blue:#0077c8; --blue-ios:#007aff;
+      --green:#34c759; --green-ink:#1a7f37; --amber:#b25000; --amber-bg:#fff8f0;
+      --red:#ff3b30; --radius:12px; --safe-top:54px; --safe-bottom:28px;
+      --nav-h:44px; --tab-h:49px; --phone-w:390px; --phone-h:844px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+      background:radial-gradient(1200px 600px at 15% -10%,#1e3a5f,transparent 50%),radial-gradient(900px 500px at 100% 0%,#0c4a6e,transparent 45%),#0b1220;
+      color:var(--ink);-webkit-font-smoothing:antialiased}
+    .page{min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px 12px 40px}
+    .chrome{text-align:center;color:#e2e8f0;max-width:760px;width:100%}
+    .chrome h1{margin:0 0 6px;font-size:22px;font-weight:650;letter-spacing:-.02em}
+    .chrome p{margin:0;font-size:14px;color:#94a3b8;line-height:1.45}
+    .pill-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+    .pill{font-size:11px;font-weight:600;border-radius:999px;padding:4px 10px;background:rgba(52,211,153,.12);color:#34d399;border:1px solid rgba(52,211,153,.3)}
+    .pill.cut{background:rgba(248,113,113,.1);color:#fca5a5;border-color:rgba(248,113,113,.3)}
+    .metric{margin-top:12px;text-align:left;font-size:12px;font-family:ui-monospace,Menlo,monospace;color:#7dd3fc;background:rgba(14,116,144,.18);border:1px solid rgba(56,189,248,.28);border-radius:12px;padding:10px 12px;line-height:1.5}
+    .scenario-block{margin-top:12px;text-align:left;background:rgba(15,23,42,.55);border:1px solid rgba(148,163,184,.22);border-radius:14px;padding:12px 14px}
+    .scenario-block h2{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8}
+    .state-toggle{display:flex;gap:6px;flex-wrap:wrap}
+    .state-toggle button{border:1px solid rgba(148,163,184,.35);background:rgba(30,41,59,.75);color:#e2e8f0;border-radius:12px;padding:8px 11px;font:inherit;font-size:11px;font-weight:600;cursor:pointer;text-align:left}
+    .state-toggle button.on{background:rgba(56,189,248,.2);border-color:rgba(56,189,248,.45);color:#7dd3fc}
+    .state-toggle button em{display:block;font-style:normal;font-weight:500;font-size:10px;color:#94a3b8;margin-top:2px}
+    .stage{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;align-items:flex-start;width:100%;max-width:1100px}
+    .phone{width:var(--phone-w);height:var(--phone-h);background:#000;border-radius:44px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.45);flex-shrink:0}
+    .sw{width:100%;height:100%;background:var(--bg);border-radius:34px;overflow:hidden;position:relative}
+    .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:120px;height:28px;background:#000;border-radius:20px;z-index:30}
+    .status{position:absolute;top:14px;left:28px;right:28px;font-size:15px;font-weight:600;z-index:20;display:flex;justify-content:space-between;pointer-events:none}
+    .home-ind{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:128px;height:5px;background:#111;border-radius:99px;opacity:.28;z-index:25}
+    .app{position:absolute;inset:0;padding-top:var(--safe-top);padding-bottom:calc(var(--safe-bottom)+var(--tab-h));display:flex;flex-direction:column}
+    .app.no-tab{padding-bottom:var(--safe-bottom)}.app.no-tab .tabbar{display:none}
+    .screen{display:none;flex:1;flex-direction:column;min-height:0}.screen.on{display:flex}
+    .nav{min-height:var(--nav-h);display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;padding:0 8px}
+    .nav.large{flex-direction:column;align-items:stretch;min-height:auto;padding:4px 16px 8px}
+    .nav .t{font-weight:600;font-size:17px;max-width:60%;text-align:center}
+    .nav.large .t{font-size:34px;font-weight:700;max-width:none;text-align:left;margin-top:4px;letter-spacing:-.03em}
+    .nav .back{position:absolute;left:4px;border:0;background:0;color:var(--blue-ios);font-size:17px;padding:10px 12px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:2px}
+    .nav .back svg{width:12px;height:20px}
+    .content{flex:1;overflow-y:auto;padding:0 16px 20px}
+    .status-line{font-size:14px;font-weight:600;color:var(--green-ink);margin:0 0 12px}.status-line.warn{color:var(--amber)}.status-line.muted{color:var(--muted);font-weight:500}
+    .hero-cta{display:none;width:100%;border:0;border-radius:14px;background:var(--blue);color:#fff;padding:18px 16px;margin-bottom:14px;text-align:left;font:inherit;cursor:pointer}
+    .hero-cta.show{display:block}.hero-cta strong{display:block;font-size:17px}.hero-cta span{display:block;font-size:13px;opacity:.9;margin-top:4px}
+    /* Fat status card — is the action surface */
+    .dev-card{background:var(--surface);border-radius:var(--radius);padding:14px 14px 12px;margin-bottom:12px;box-shadow:0 0 0 .5px var(--line)}
+    .dev-card.warn{background:var(--amber-bg);box-shadow:0 0 0 1px rgba(178,80,0,.25)}
+    .dev-card .top{display:flex;gap:12px;align-items:flex-start}
+    .dev-card .ic{width:44px;height:44px;border-radius:12px;background:#5ac8fa;color:#fff;display:grid;place-items:center;flex-shrink:0}
+    .dev-card .ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .dev-card .body{flex:1;min-width:0}
+    .dev-card .name{font-size:17px;font-weight:650}
+    .dev-card .model{font-size:13px;color:var(--muted);margin-top:1px}
+    .dev-card .fact{font-size:15px;font-weight:600;margin-top:10px;color:var(--green-ink)}
+    .dev-card.warn .fact{color:var(--amber)}
+    .dev-card .fact.stale{color:var(--amber)}
+    .dev-card .subfact{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.3}
+    .dev-card .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+    .dev-card .actions button{flex:1;min-width:100px;border:0;border-radius:10px;padding:11px 12px;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+    .dev-card .actions .pri{background:var(--blue);color:#fff}
+    .dev-card .actions .sec{background:#e8e8ed;color:var(--ink)}
+    .dev-card .actions .danger{background:#ffe5e3;color:var(--red)}
+    .dev-card .sched-row{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:.5px solid var(--line);gap:10px}
+    .dev-card .sched-row .label{font-size:15px}.dev-card .sched-row .label small{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:1px}
+    .group{background:var(--surface);border-radius:var(--radius);overflow:hidden}
+    .row{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:11px 16px;border:0;background:var(--surface);text-align:left;font:inherit;color:inherit;cursor:pointer;position:relative}
+    .row:active{background:#e5e5ea}.row.static{cursor:default}.row.static:active{background:var(--surface)}
+    .row+.row::before{content:"";position:absolute;left:16px;right:0;top:0;height:.5px;background:var(--line)}
+    .meta{flex:1;min-width:0}.meta .title{display:block;font-size:17px}.meta .sub{display:block;font-size:13px;color:var(--muted);margin-top:1px}
+    .val{font-size:17px;color:var(--muted)}.chev{color:#c7c7cc;font-size:18px}
+    .toggle{width:51px;height:31px;border-radius:999px;border:0;background:#e9e9eb;position:relative;cursor:pointer;padding:0;flex-shrink:0}
+    .toggle.on{background:var(--green)}
+    .toggle::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15);transition:transform .15s}
+    .toggle.on::after{transform:translateX(20px)}
+    .callout{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+    .callout.warn{background:var(--amber-bg)}.callout.ok{background:#e8f8ed}
+    .callout h3{margin:0 0 6px;font-size:17px;font-weight:600}.callout p{margin:0;font-size:15px;color:var(--muted);line-height:1.4}
+    .footer-note{font-size:12px;color:var(--muted);line-height:1.35;margin:10px 0 0}
+    .btn{width:100%;border:0;border-radius:12px;padding:15px;font-size:17px;font-weight:600;cursor:pointer;font-family:inherit}
+    .btn.primary{background:var(--blue);color:#fff}.btn.secondary{background:var(--surface);color:var(--blue-ios);box-shadow:0 0 0 .5px var(--line);margin-top:8px}
+    .btn.ghost{background:0;color:var(--blue-ios);margin-top:4px}
+    .center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+    .center .ok{width:64px;height:64px;border-radius:50%;background:#e8f8ed;color:var(--green);display:grid;place-items:center;font-size:28px;margin-bottom:16px}
+    .center h2{margin:0 0 8px;font-size:22px}.center p{margin:0 0 16px;font-size:15px;color:var(--muted);max-width:280px;line-height:1.4}
+    .toast{position:absolute;left:50%;bottom:calc(var(--tab-h)+var(--safe-bottom)+16px);transform:translateX(-50%) translateY(16px);opacity:0;background:rgba(30,30,30,.92);color:#fff;border-radius:12px;padding:12px 18px;font-size:15px;font-weight:500;z-index:50;pointer-events:none;transition:.2s;max-width:88%;text-align:center}
+    .app.no-tab .toast{bottom:calc(var(--safe-bottom)+24px)}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    /* Notification chrome (system, not app tab) */
+    .notif{display:none;margin:0 12px 12px;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);border-radius:16px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.18);text-align:left;z-index:40;position:relative}
+    .notif.show{display:block}.notif .appname{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+    .notif .title{font-size:15px;font-weight:650;margin-top:4px}.notif .body{font-size:13px;color:var(--muted);margin-top:2px}
+    .notif .acts{display:flex;gap:8px;margin-top:10px}
+    .notif .acts button{flex:1;border:0;border-radius:8px;padding:8px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;background:#e8e8ed}
+    .notif .acts button.pri{background:var(--blue);color:#fff}
+    /* Home due chip */
+    .due-banner{display:none;background:var(--amber-bg);border-radius:var(--radius);padding:14px 16px;margin-bottom:14px;text-align:left;border:0;width:100%;font:inherit;cursor:pointer}
+    .due-banner.show{display:block}.due-banner strong{display:block;font-size:16px;color:var(--amber)}.due-banner span{font-size:13px;color:var(--muted)}
+    .home-card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+    .home-card .k{font-size:13px;color:var(--muted)}.home-card .v{font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:4px}
+    .home-card .s{font-size:13px;color:var(--muted);margin-top:4px}
+    .tabbar{position:absolute;left:0;right:0;bottom:0;height:calc(var(--tab-h)+var(--safe-bottom));padding:6px 0 var(--safe-bottom);background:rgba(249,249,249,.94);border-top:.5px solid var(--line);display:flex;z-index:20}
+    .tabbar button{flex:1;border:0;background:0;color:var(--muted);font-size:10px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font-family:inherit}
+    .tabbar button.on{color:var(--blue)}
+    .tabbar button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+    .side-col{width:min(320px,100%);display:flex;flex-direction:column;gap:12px;max-height:var(--phone-h)}
+    .inspector{flex:1;overflow-y:auto;background:rgba(15,23,42,.55);border:1px solid rgba(148,163,184,.22);border-radius:16px;padding:14px;color:#e2e8f0}
+    .inspector h3{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8}
+    .inspector pre{margin:0;font-size:10px;line-height:1.45;color:#cbd5e1;white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace}
+    .inspector .rules{margin-top:12px;padding-top:10px;border-top:1px solid rgba(148,163,184,.2);font-size:11px;color:#94a3b8;line-height:1.45}
+    .inspector .rules li{margin:5px 0}
+    .inspector .rules strong{color:#e2e8f0}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+    @media(max-width:720px){.side-col{max-height:none}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="chrome">
+      <h1>Devices 10× — closed loop</h1>
+      <p><strong>Is data flowing? If not, one tap to fix.</strong><br />
+      Auto-sync default · card = action · pair → first reading · schedule invisible · Home owns due.</p>
+      <div class="pill-row">
+        <span class="pill">Auto-sync happy path</span>
+        <span class="pill">Card actions</span>
+        <span class="pill">Pair = first reading</span>
+        <span class="pill">Default 8:00</span>
+        <span class="pill">Home due</span>
+        <span class="pill">System notif</span>
+        <span class="pill cut">No detail museum</span>
+        <span class="pill cut">No Transfer ritual</span>
+        <span class="pill cut">No day matrix</span>
+      </div>
+      <div class="metric" id="live-metric">
+        North star: % devices with transfer in last 7d<br />
+        Factory: pair→reading · auto% · prompt→reading · re-reg→reading · Devices opens (↓ healthy)
+      </div>
+      <div class="scenario-block">
+        <h2>Physics scenarios</h2>
+        <div class="state-toggle" id="state-toggle">
+          <button type="button" class="on" data-state="healthy"><b>H0 Healthy</b><em>Auto-sync · boring Devices</em></button>
+          <button type="button" data-state="empty"><b>H1 Empty</b><em>Hero Add only</em></button>
+          <button type="button" data-state="broken"><b>H2 Broken</b><em>Fix → reading</em></button>
+          <button type="button" data-state="stale"><b>H3 Stale</b><em>Manual transfer rare</em></button>
+          <button type="button" data-state="due"><b>H4 Due</b><em>Home + notification</em></button>
+          <button type="button" data-state="pair"><b>H5 Pair loop</b><em>→ first reading</em></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="phone"><div class="sw">
+        <div class="notch"></div>
+        <div class="status"><span>9:41</span><span>●●●● Wi‑Fi</span></div>
+
+        <!-- System notification overlay (not a tab) -->
+        <div class="notif" id="notif" style="position:absolute;top:52px;left:0;right:0;z-index:35">
+          <div class="appname">OMRON Connect</div>
+          <div class="title">Time to measure BP</div>
+          <div class="body">No reading yet today · Skip if already done</div>
+          <div class="acts">
+            <button type="button" class="pri" data-action="notif-measure">Measure</button>
+            <button type="button" data-action="notif-skip">Skip</button>
+          </div>
+        </div>
+
+        <div class="app" id="app">
+
+          <!-- HOME: owns due -->
+          <section class="screen" id="s-home">
+            <div class="nav large"><div class="t">Home</div></div>
+            <div class="content">
+              <button type="button" class="due-banner" id="due-banner" data-action="home-measure">
+                <strong>Time to measure</strong>
+                <span>BP due · schedule 8:00 · smart skip off (no reading yet)</span>
+              </button>
+              <div class="home-card">
+                <div class="k">Latest BP</div>
+                <div class="v" id="home-bp">128/82</div>
+                <div class="s" id="home-bp-sub">Today · auto-synced 2h ago</div>
+              </div>
+              <div class="home-card">
+                <div class="k">This week</div>
+                <div class="v" id="home-week">6 readings</div>
+                <div class="s">From your BP Monitor</div>
+              </div>
+              <p class="footer-note">Home closes the measure loop. Devices is for inventory + exceptions — not daily ritual.</p>
+            </div>
+          </section>
+
+          <!-- DEVICES: exceptions + inventory -->
+          <section class="screen on" id="s-devices">
+            <div class="nav large"><div class="t">Devices</div></div>
+            <div class="content">
+              <p class="status-line" id="status-line">Data flowing · last reading 2h ago</p>
+              <button type="button" class="hero-cta" id="hero-cta" data-go="add">
+                <strong>Add a device</strong>
+                <span>Pair a monitor — first reading is success</span>
+              </button>
+              <div id="device-host"></div>
+              <div class="group" id="add-row" style="margin-top:6px">
+                <button class="row" data-go="add">
+                  <span class="meta"><span class="title">Add device</span><span class="sub">One door · adapters inside</span></span>
+                  <span class="chev">›</span>
+                </button>
+              </div>
+              <p class="footer-note" id="devices-note">Healthy: no Transfer button. Auto-sync did the work. Open Devices less when loop works.</p>
+            </div>
+          </section>
+
+          <!-- FIX PIPELINE -->
+          <section class="screen" id="s-fix">
+            <div class="nav">
+              <button class="back" data-go="devices"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Devices</button>
+              <div class="t">Fix connection</div>
+            </div>
+            <div class="content">
+              <div class="callout warn">
+                <h3>Can’t get readings</h3>
+                <p>This device must reconnect. Success = a new reading lands — not a green check alone.</p>
+              </div>
+              <div class="group" style="margin-bottom:14px">
+                <div class="row static"><span class="meta"><span class="title">1. Turn monitor on</span><span class="sub">Near this phone</span></span></div>
+                <div class="row static"><span class="meta"><span class="title">2. Bluetooth on</span><span class="sub">System Settings if needed</span></span></div>
+                <div class="row static"><span class="meta"><span class="title">3. Reconnect</span><span class="sub">We’ll pull readings automatically</span></span></div>
+              </div>
+              <button class="btn primary" data-action="fix-reconnect">Reconnect</button>
+              <p class="footer-note">Metric: re-reg open → reading in 24h. Badge without that pipeline is theater.</p>
+            </div>
+          </section>
+
+          <section class="screen" id="s-fix-done">
+            <div class="center">
+              <div class="ok">✓</div>
+              <h2>Connection fixed</h2>
+              <p id="fix-done-body">Pulling readings…</p>
+              <button class="btn primary" style="max-width:280px" data-action="fix-got-readings">Simulate 8 readings landed</button>
+            </div>
+          </section>
+
+          <!-- RARE manual transfer -->
+          <section class="screen" id="s-transfer">
+            <div class="center">
+              <div class="ok" style="background:var(--blue);color:#fff">↻</div>
+              <h2>Pulling readings…</h2>
+              <p>Manual transfer — only when auto-sync didn’t run (stale / recovery).</p>
+              <button class="btn primary" style="max-width:240px;margin-top:8px" data-action="transfer-done">Simulate success</button>
+              <button class="btn ghost" data-go="devices">Cancel</button>
+            </div>
+          </section>
+
+          <!-- PAIR: one door → first reading -->
+          <section class="screen" id="s-add">
+            <div class="nav">
+              <button class="back" data-go="devices"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Devices</button>
+              <div class="t">Add device</div>
+            </div>
+            <div class="content">
+              <div class="callout">
+                <h3>One door</h3>
+                <p>Bluetooth on · device in pairing mode. Category/series adapters run under the hood — not a museum of entry points.</p>
+              </div>
+              <button class="btn primary" data-action="search">Search for device</button>
+            </div>
+          </section>
+
+          <section class="screen" id="s-pairing">
+            <div class="nav">
+              <button class="back" data-go="add"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Add</button>
+              <div class="t">Searching</div>
+            </div>
+            <div class="content">
+              <div class="center" style="min-height:280px">
+                <div class="ok" style="background:var(--blue);color:#fff;animation:pulse 1.2s infinite">…</div>
+                <h2>Looking for monitor</h2>
+                <p>Keep it close. Fail loud on one recovery screen (demo skips fail path).</p>
+                <button class="btn primary" style="max-width:240px" data-action="found">Simulate found</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Pair success = first reading, not "Connected" alone -->
+          <section class="screen" id="s-pair-transfer">
+            <div class="center">
+              <div class="ok" style="background:var(--blue);color:#fff">↻</div>
+              <h2>Connected — pulling readings</h2>
+              <p>Pairing isn’t done until data lands. Green check without readings is a lie.</p>
+              <button class="btn primary" style="max-width:280px" data-action="first-reading-ok">Simulate first readings</button>
+              <button class="btn secondary" style="max-width:280px" data-action="first-reading-empty">No readings on device yet</button>
+            </div>
+          </section>
+
+          <section class="screen" id="s-pair-done">
+            <div class="center">
+              <div class="ok">✓</div>
+              <h2 id="pair-done-title">12 readings ready</h2>
+              <p id="pair-done-body">BP Monitor is working. Auto-sync will keep data flowing.</p>
+              <div class="callout ok" style="width:100%;max-width:300px;text-align:left;margin-bottom:16px">
+                <h3 style="font-size:15px">Daily reminder · 8:00</h3>
+                <p style="font-size:13px">On by default · skip if already measured. Change later on the device card.</p>
+              </div>
+              <button class="btn primary" style="max-width:280px" data-action="pair-finish-sched">Keep 8:00 reminder</button>
+              <button class="btn secondary" style="max-width:280px" data-action="pair-finish-nosched">No reminder</button>
+            </div>
+          </section>
+
+          <!-- Advanced schedule only if they want change -->
+          <section class="screen" id="s-schedule">
+            <div class="nav">
+              <button class="back" data-go="devices"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Devices</button>
+              <div class="t">Reminder</div>
+            </div>
+            <div class="content">
+              <div class="callout">
+                <h3>Most people never open this</h3>
+                <p>Default every day · one time · smart skip. No day matrix in 10×.</p>
+              </div>
+              <div class="group">
+                <div class="row static">
+                  <span class="meta"><span class="title">Reminder</span></span>
+                  <button type="button" class="toggle on" id="t-sched"></button>
+                </div>
+                <button class="row" data-action="cycle-time">
+                  <span class="meta"><span class="title">Time</span></span>
+                  <span class="val" id="v-time">8:00 AM</span>
+                  <span class="chev">›</span>
+                </button>
+                <div class="row static">
+                  <span class="meta"><span class="title">Skip if already measured</span></span>
+                  <button type="button" class="toggle on" id="t-skip"></button>
+                </div>
+              </div>
+              <p class="footer-note">Second time earns its way back with data — not in the default path.</p>
+            </div>
+          </section>
+
+          <!-- Measure from notif / home -->
+          <section class="screen" id="s-measure">
+            <div class="center">
+              <div class="ok" style="background:var(--blue);color:#fff">◎</div>
+              <h2>Measure on your cuff</h2>
+              <p>Then we’ll auto-pull. This screen is the loop — not Devices settings.</p>
+              <button class="btn primary" style="max-width:280px" data-action="measure-done">Simulate reading saved</button>
+              <button class="btn ghost" data-go="home">Back to Home</button>
+            </div>
+          </section>
+
+          <nav class="tabbar">
+            <button type="button" data-go="home" id="tab-home"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9z"/></svg>Home</button>
+            <button type="button" class="on" data-go="devices" id="tab-devices"><svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M10 18h4"/></svg>Devices</button>
+            <button type="button" data-action="toast" data-toast="Share starves without readings in the loop"><svg viewBox="0 0 24 24"><path d="M8 12h12M14 6l6 6-6 6"/><path d="M4 6v12"/></svg>Share</button>
+            <button type="button" data-action="toast" data-toast="Profile deep-links to Devices — one list truth"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 19c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>Profile</button>
+          </nav>
+        </div>
+        <div class="toast" id="toast"></div>
+        <div class="home-ind"></div>
+      </div></div>
+
+      <div class="side-col">
+        <aside class="inspector">
+          <h3>Factory metrics (demo)</h3>
+          <pre id="insp">—</pre>
+          <ul class="rules">
+            <li><strong>1</strong> Auto-sync = happy path; Transfer = recovery</li>
+            <li><strong>2</strong> Card is the action surface</li>
+            <li><strong>3</strong> Pair done = first reading</li>
+            <li><strong>4</strong> Default 8:00 · no day matrix</li>
+            <li><strong>5</strong> Fix pipeline → reading</li>
+            <li><strong>6</strong> Home + notif own due</li>
+            <li><strong>7</strong> One Add door · one list truth</li>
+            <li><strong>8</strong> Healthy users open Devices less</li>
+            <li><strong>9</strong> Features earn their way back</li>
+            <li><strong>10</strong> Question: is data flowing?</li>
+          </ul>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TIMES = ["8:00 AM", "7:00 AM", "9:00 AM"];
+    let timeIdx = 0;
+    let scenario = "healthy";
+    let screen = "devices";
+    let device = null;
+    let due = false;
+    let notifOn = false;
+    let metrics = {
+      pairToReading: "—",
+      autoPct: "—",
+      promptToReading: "—",
+      reregToReading: "—",
+      devicesOpens: 0,
+      lastEvent: "boot",
+    };
+
+    function toast(m) {
+      const el = document.getElementById("toast");
+      el.textContent = m;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.remove("show"), 2400);
+    }
+
+    function mkDevice(o = {}) {
+      return {
+        name: "BP Monitor",
+        model: "HEM-7156",
+        lastReading: "2h ago",
+        lastHours: 2,
+        readingCountWeek: 6,
+        latestBp: "128/82",
+        schedule: true,
+        time: "8:00 AM",
+        smartSkip: true,
+        attention: false,
+        autoSync: true,
+        ...o,
+      };
+    }
+
+    function setNotif(on) {
+      notifOn = on;
+      document.getElementById("notif").classList.toggle("show", on);
+    }
+
+    function go(id) {
+      screen = id;
+      if (id === "devices") metrics.devicesOpens++;
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("on"));
+      const el = document.getElementById("s-" + id) || document.getElementById("s-devices");
+      el.classList.add("on");
+      const tabbed = id === "home" || id === "devices";
+      document.getElementById("app").classList.toggle("no-tab", !tabbed);
+      document.getElementById("tab-home").classList.toggle("on", id === "home");
+      document.getElementById("tab-devices").classList.toggle("on", id === "devices");
+      const c = el.querySelector(".content");
+      if (c) c.scrollTop = 0;
+      if (id === "devices") renderDevices();
+      if (id === "home") renderHome();
+      if (id === "schedule") syncSched();
+      insp();
+    }
+
+    function renderHome() {
+      document.getElementById("due-banner").classList.toggle("show", due && device && !device.attention);
+      if (!device) {
+        document.getElementById("home-bp").textContent = "—";
+        document.getElementById("home-bp-sub").textContent = "Add a device to measure";
+        document.getElementById("home-week").textContent = "0 readings";
+        return;
+      }
+      document.getElementById("home-bp").textContent = due ? "—" : device.latestBp;
+      document.getElementById("home-bp-sub").textContent = due
+        ? "No reading yet today"
+        : `${device.lastReading} · auto-synced`;
+      document.getElementById("home-week").textContent = `${device.readingCountWeek} readings`;
+    }
+
+    function renderDevices() {
+      const empty = !device;
+      document.getElementById("hero-cta").classList.toggle("show", empty);
+      document.getElementById("add-row").style.display = empty ? "none" : "";
+      const host = document.getElementById("device-host");
+      const sl = document.getElementById("status-line");
+      const note = document.getElementById("devices-note");
+
+      if (empty) {
+        sl.textContent = "Add a device to get started";
+        sl.className = "status-line warn";
+        host.innerHTML = "";
+        note.textContent = "Empty must look unfinished. One job: Add.";
+        return;
+      }
+
+      if (device.attention) {
+        sl.textContent = "Can’t get readings · fix now";
+        sl.className = "status-line warn";
+        note.textContent = "Broken state is the product. Fix pipeline ends in a reading.";
+      } else if (device.lastHours > 72) {
+        sl.textContent = "Data may be stuck · last reading stale";
+        sl.className = "status-line warn";
+        note.textContent = "Manual Transfer is recovery — not the daily habit.";
+      } else if (device.autoSync) {
+        sl.textContent = `Data flowing · last reading ${device.lastReading}`;
+        sl.className = "status-line";
+        note.textContent = "Healthy: no Transfer button. Auto-sync did the work. Open Devices less.";
+      } else {
+        sl.textContent = `Last reading ${device.lastReading}`;
+        sl.className = "status-line muted";
+        note.textContent = "";
+      }
+
+      const warn = device.attention || device.lastHours > 72;
+      let fact, factClass = "fact";
+      if (device.attention) {
+        fact = "Can’t get readings";
+        factClass = "fact";
+      } else if (device.lastHours > 72) {
+        fact = `Last reading ${device.lastReading}`;
+        factClass = "fact stale";
+      } else {
+        fact = `Last reading ${device.lastReading}`;
+        factClass = "fact";
+      }
+
+      const sub = device.attention
+        ? "Reconnect required before new data can land"
+        : device.autoSync && device.lastHours <= 72
+          ? `${device.model} · auto-sync on · ${device.readingCountWeek} this week`
+          : `${device.model} · ${device.readingCountWeek} this week`;
+
+      // Actions: Fix | Transfer (only stale) | never both Transfer and healthy empty actions
+      let actions = "";
+      if (device.attention) {
+        actions = `<button type="button" class="pri" data-action="open-fix">Fix now</button>`;
+      } else if (device.lastHours > 72) {
+        actions = `<button type="button" class="pri" data-action="manual-transfer">Transfer</button>`;
+      }
+      // Healthy: no action buttons — schedule toggle only
+
+      const schedLabel = device.schedule
+        ? `Daily · ${device.time}`
+        : "Off";
+
+      host.innerHTML = `
+        <div class="dev-card${warn ? " warn" : ""}">
+          <div class="top">
+            <span class="ic"><svg viewBox="0 0 24 24"><path d="M4 14h4l2-4 2 8 2-4h6"/></svg></span>
+            <span class="body">
+              <div class="name">${device.name}</div>
+              <div class="model">${device.model}</div>
+            </span>
+          </div>
+          <div class="${factClass}">${fact}</div>
+          <div class="subfact">${sub}</div>
+          ${actions ? `<div class="actions">${actions}</div>` : ""}
+          <div class="sched-row">
+            <div class="label">Measure reminder<small>${device.schedule ? "Skip if already measured" : "No prompt"}</small></div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:13px;color:var(--muted);font-weight:600">${schedLabel}</span>
+              <button type="button" class="toggle${device.schedule ? " on" : ""}" id="card-sched" data-action="toggle-sched"></button>
+            </div>
+          </div>
+          ${device.schedule ? `<button type="button" class="row" style="margin-top:4px;border-radius:8px" data-go="schedule"><span class="meta"><span class="title" style="font-size:15px;color:var(--blue-ios)">Change time</span></span></button>` : ""}
+        </div>`;
+    }
+
+    function syncSched() {
+      if (!device) return;
+      document.getElementById("t-sched").classList.toggle("on", device.schedule);
+      document.getElementById("v-time").textContent = device.time;
+      document.getElementById("t-skip").classList.toggle("on", device.smartSkip);
+    }
+
+    function insp() {
+      document.getElementById("insp").textContent = [
+        `scenario:     ${scenario}`,
+        `screen:       ${screen}`,
+        `device:       ${device ? device.name : "none"}`,
+        `attention:    ${device ? device.attention : "—"}`,
+        `lastReading:  ${device ? device.lastReading : "—"}`,
+        `autoSync:     ${device ? device.autoSync : "—"}`,
+        `schedule:     ${device ? (device.schedule ? device.time : "off") : "—"}`,
+        `due/notif:    ${due}/${notifOn}`,
+        `--- factory ---`,
+        `pair→reading: ${metrics.pairToReading}`,
+        `auto %:       ${metrics.autoPct}`,
+        `prompt→read:  ${metrics.promptToReading}`,
+        `re-reg→read:  ${metrics.reregToReading}`,
+        `Devices opens:${metrics.devicesOpens}`,
+        `last event:   ${metrics.lastEvent}`,
+      ].join("\n");
+
+      document.getElementById("live-metric").innerHTML =
+        `North star: devices with reading in 7d · demo state <b style="color:#e2e8f0">${scenario}</b><br>` +
+        `pair→reading: ${metrics.pairToReading} · auto%: ${metrics.autoPct} · prompt→read: ${metrics.promptToReading} · re-reg→read: ${metrics.reregToReading} · Devices opens: ${metrics.devicesOpens}`;
+    }
+
+    function applyScenario(name) {
+      scenario = name;
+      document.querySelectorAll("#state-toggle button").forEach(b =>
+        b.classList.toggle("on", b.dataset.state === name)
+      );
+      due = false;
+      setNotif(false);
+      timeIdx = 0;
+      metrics.lastEvent = "scenario:" + name;
+
+      switch (name) {
+        case "empty":
+          device = null;
+          metrics.autoPct = "n/a";
+          go("devices");
+          break;
+        case "broken":
+          device = mkDevice({
+            attention: true,
+            lastReading: "—",
+            lastHours: 999,
+            readingCountWeek: 2,
+            autoSync: false,
+          });
+          metrics.reregToReading = "open";
+          go("devices");
+          break;
+        case "stale":
+          device = mkDevice({
+            lastReading: "5 days ago",
+            lastHours: 120,
+            readingCountWeek: 1,
+            autoSync: true,
+            latestBp: "130/85",
+          });
+          metrics.autoPct = "low — manual recovery";
+          go("devices");
+          break;
+        case "due":
+          device = mkDevice({
+            lastReading: "yesterday",
+            lastHours: 20,
+            schedule: true,
+            readingCountWeek: 5,
+          });
+          due = true;
+          setNotif(true);
+          metrics.promptToReading = "pending";
+          go("home");
+          break;
+        case "pair":
+          device = null;
+          go("add");
+          break;
+        default: // healthy
+          device = mkDevice();
+          metrics.autoPct = "high";
+          metrics.pairToReading = "done (prior)";
+          go("devices");
+      }
+      renderDevices();
+      renderHome();
+      insp();
+    }
+
+    document.body.addEventListener("click", e => {
+      const g = e.target.closest("[data-go]");
+      if (g && !e.target.closest(".toggle") && !e.target.closest("#state-toggle") && !e.target.closest("[data-action]")) {
+        go(g.dataset.go);
+        return;
+      }
+      // schedule link on card uses data-go
+      if (g && g.dataset.go === "schedule") {
+        go("schedule");
+        return;
+      }
+
+      const act = e.target.closest("[data-action]");
+      if (!act) return;
+      const a = act.dataset.action;
+
+      if (a === "toast") toast(act.dataset.toast || "Demo");
+      if (a === "open-fix") go("fix");
+      if (a === "fix-reconnect") {
+        metrics.lastEvent = "fix reconnect";
+        go("fix-done");
+      }
+      if (a === "fix-got-readings") {
+        if (device) {
+          device.attention = false;
+          device.lastReading = "Just now";
+          device.lastHours = 0;
+          device.autoSync = true;
+          device.readingCountWeek += 8;
+          device.latestBp = "126/80";
+        }
+        metrics.reregToReading = "reading in <1h ✓";
+        metrics.lastEvent = "re-reg → reading";
+        toast("8 readings landed — Fix succeeded");
+        go("devices");
+      }
+      if (a === "manual-transfer") go("transfer");
+      if (a === "transfer-done") {
+        if (device) {
+          device.lastReading = "Just now";
+          device.lastHours = 0;
+          device.readingCountWeek += 4;
+          device.latestBp = "127/81";
+        }
+        metrics.lastEvent = "manual transfer (recovery)";
+        toast("4 readings transferred");
+        go("devices");
+      }
+      if (a === "search") go("pairing");
+      if (a === "found") {
+        device = mkDevice({
+          lastReading: "—",
+          lastHours: 999,
+          readingCountWeek: 0,
+          schedule: false,
+          attention: false,
+          autoSync: true,
+        });
+        metrics.pairToReading = "in progress";
+        go("pair-transfer");
+      }
+      if (a === "first-reading-ok") {
+        if (device) {
+          device.lastReading = "Just now";
+          device.lastHours = 0;
+          device.readingCountWeek = 12;
+          device.latestBp = "128/82";
+        }
+        metrics.pairToReading = "minutes ✓";
+        document.getElementById("pair-done-title").textContent = "12 readings ready";
+        document.getElementById("pair-done-body").textContent =
+          "BP Monitor is working. Auto-sync will keep data flowing.";
+        go("pair-done");
+      }
+      if (a === "first-reading-empty") {
+        if (device) {
+          device.lastReading = "Not yet";
+          device.lastHours = 999;
+          device.readingCountWeek = 0;
+        }
+        metrics.pairToReading = "connected, awaiting measure";
+        document.getElementById("pair-done-title").textContent = "Connected — measure next";
+        document.getElementById("pair-done-body").textContent =
+          "No readings on the cuff yet. Measure once; we’ll auto-pull.";
+        go("pair-done");
+      }
+      if (a === "pair-finish-sched") {
+        if (device) {
+          device.schedule = true;
+          device.time = "8:00 AM";
+          device.smartSkip = true;
+        }
+        toast("Daily reminder 8:00 on");
+        metrics.lastEvent = "pair complete + default schedule";
+        go("devices");
+      }
+      if (a === "pair-finish-nosched") {
+        if (device) device.schedule = false;
+        toast("No reminder — you can enable on the card");
+        go("devices");
+      }
+      if (a === "toggle-sched") {
+        if (!device) return;
+        device.schedule = !device.schedule;
+        metrics.lastEvent = "card schedule " + (device.schedule ? "on" : "off");
+        renderDevices();
+        insp();
+      }
+      if (a === "cycle-time") {
+        if (!device || !device.schedule) return;
+        timeIdx = (timeIdx + 1) % TIMES.length;
+        device.time = TIMES[timeIdx];
+        syncSched();
+        renderDevices();
+      }
+      if (a === "notif-measure" || a === "home-measure") {
+        setNotif(false);
+        go("measure");
+      }
+      if (a === "notif-skip") {
+        setNotif(false);
+        due = false;
+        metrics.promptToReading = "skipped";
+        toast("Skipped for today");
+        renderHome();
+        insp();
+      }
+      if (a === "measure-done") {
+        due = false;
+        setNotif(false);
+        if (device) {
+          device.lastReading = "Just now";
+          device.lastHours = 0;
+          device.readingCountWeek += 1;
+          device.latestBp = "124/79";
+        }
+        metrics.promptToReading = "reading <1h ✓";
+        metrics.lastEvent = "prompt/home → reading";
+        toast("Reading saved · auto-synced");
+        go("home");
+      }
+    });
+
+    document.getElementById("t-sched").addEventListener("click", function () {
+      if (!device) return;
+      device.schedule = !device.schedule;
+      this.classList.toggle("on", device.schedule);
+      renderDevices();
+    });
+    document.getElementById("t-skip").addEventListener("click", function () {
+      if (!device) return;
+      device.smartSkip = !device.smartSkip;
+      this.classList.toggle("on", device.smartSkip);
+    });
+    document.getElementById("state-toggle").addEventListener("click", e => {
+      const b = e.target.closest("[data-state]");
+      if (b) applyScenario(b.dataset.state);
+    });
+
+    applyScenario("healthy");
+  </script>
+</body>
+</html>

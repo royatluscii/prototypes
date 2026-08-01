@@ -10,8 +10,9 @@ Static HTML only. No Mac, no tunnel, no build.
 | Path | What |
 |---|---|
 | [`/`](https://royatluscii.github.io/share-readings-10x-prototype/) | Landing page (this hub) |
-| [`/devices-v0/`](https://royatluscii.github.io/share-readings-10x-prototype/devices-v0/) | **Devices v0** — eng acceptance: pair · transfer · schedule only |
-| [`/devices/`](https://royatluscii.github.io/share-readings-10x-prototype/devices/) | **Devices 10× full** — broader catalog + S0–S9 scenarios |
+| [`/devices-10x/`](https://royatluscii.github.io/share-readings-10x-prototype/devices-10x/) | **Devices 10×** — closed loop: auto-sync · card actions · pair→reading · Home due |
+| [`/devices-v0/`](https://royatluscii.github.io/share-readings-10x-prototype/devices-v0/) | **Devices v0** — first eng PR: pair · transfer · schedule only |
+| [`/devices/`](https://royatluscii.github.io/share-readings-10x-prototype/devices/) | **Devices IA catalog** — broader screens + S0–S9 (not product target) |
 | [`/share-10x/`](https://royatluscii.github.io/share-readings-10x-prototype/share-10x/) | **Share readings 10×** — one builder, Save / Email / Share… |
 | [`/share-jtbd/`](https://royatluscii.github.io/share-readings-10x-prototype/share-jtbd/) | Share JTBD v1 — multi-step package → how → delivery |
 | [`/profile/`](https://royatluscii.github.io/share-readings-10x-prototype/profile/) | **Profile 10×** — Devices · Cloud · You · Settings |
