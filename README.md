@@ -15,7 +15,8 @@ Static HTML only. No Mac, no tunnel, no build.
 | [`/devices/`](https://royatluscii.github.io/prototypes/devices/) | **Devices IA catalog** — broader screens + S0–S9 (not product target) |
 | [`/share-10x/`](https://royatluscii.github.io/prototypes/share-10x/) | **Share readings 10×** — one builder, Save / Email / Share… |
 | [`/share-jtbd/`](https://royatluscii.github.io/prototypes/share-jtbd/) | Share JTBD v1 — multi-step package → how → delivery |
-| [`/profile/`](https://royatluscii.github.io/prototypes/profile/) | **Profile 10×** — Devices · Cloud · You · Settings |
+| [`/profile-wc/`](https://royatluscii.github.io/prototypes/profile-wc/) | **Profile world-class** — pixel craft on every screen; S0–S9 |
+| [`/profile/`](https://royatluscii.github.io/prototypes/profile/) | **Profile 10×** — Devices · Cloud · You · Settings (IA baseline) |
 | [`/measure-schedule/`](https://royatluscii.github.io/prototypes/measure-schedule/) | **Measure schedule** — reminders on device (also in Devices) |
 
 ## Local

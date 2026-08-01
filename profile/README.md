@@ -1,6 +1,7 @@
 # Profile 10× — full flows
 
 **Live:** https://royatluscii.github.io/prototypes/profile/  
+**World-class craft variant:** https://royatluscii.github.io/prototypes/profile-wc/  
 **Hub:** https://royatluscii.github.io/prototypes/
 
 ## Scenarios (S0–S9)
