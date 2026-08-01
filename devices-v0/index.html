@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Devices v0 — pair · transfer · schedule</title>
+  <style>
+    :root {
+      --bg:#f2f2f7; --surface:#fff; --ink:#000; --muted:#8e8e93;
+      --line:rgba(60,60,67,.29); --blue:#0077c8; --blue-ios:#007aff;
+      --green:#34c759; --green-ink:#1a7f37; --amber:#b25000; --amber-bg:#fff8f0;
+      --red:#ff3b30; --radius:10px; --safe-top:54px; --safe-bottom:28px;
+      --nav-h:44px; --tab-h:49px; --phone-w:390px; --phone-h:844px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;
+      background:radial-gradient(1200px 600px at 20% -10%,#dbeafe,transparent 50%),radial-gradient(900px 500px at 100% 0%,#e0f2fe,transparent 45%),#0f172a;
+      color:var(--ink);-webkit-font-smoothing:antialiased}
+    .page{min-height:100vh;display:flex;flex-direction:column;align-items:center;gap:14px;padding:18px 12px 36px}
+    .chrome{text-align:center;color:#e2e8f0;max-width:720px;width:100%}
+    .chrome h1{margin:0 0 6px;font-size:22px;font-weight:650;letter-spacing:-.02em}
+    .chrome p{margin:0;font-size:14px;color:#94a3b8;line-height:1.45}
+    .chrome .cut{margin-top:10px;font-size:12px;color:#fbbf24;line-height:1.45;text-align:left;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:12px;padding:10px 12px}
+    .chrome .cut strong{color:#fde68a}
+    .metric{margin-top:10px;font-size:12px;color:#7dd3fc;font-family:ui-monospace,Menlo,monospace;text-align:left;background:rgba(14,116,144,.2);border:1px solid rgba(56,189,248,.25);border-radius:12px;padding:10px 12px}
+    .scenario-block{margin-top:12px;text-align:left;background:rgba(15,23,42,.55);border:1px solid rgba(148,163,184,.22);border-radius:14px;padding:12px 14px}
+    .scenario-block h2{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8}
+    .state-toggle{display:flex;gap:6px;flex-wrap:wrap}
+    .state-toggle button{border:1px solid rgba(148,163,184,.35);background:rgba(30,41,59,.75);color:#e2e8f0;border-radius:999px;padding:8px 12px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;text-align:left}
+    .state-toggle button.on{background:rgba(56,189,248,.2);border-color:rgba(56,189,248,.45);color:#7dd3fc}
+    .state-toggle button em{display:block;font-style:normal;font-weight:500;font-size:10px;color:#94a3b8;margin-top:2px}
+    .stage{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;align-items:flex-start;width:100%;max-width:900px}
+    .phone{width:var(--phone-w);height:var(--phone-h);background:#000;border-radius:44px;padding:12px;box-shadow:0 8px 28px rgba(15,23,42,.35);flex-shrink:0}
+    .sw{width:100%;height:100%;background:var(--bg);border-radius:34px;overflow:hidden;position:relative}
+    .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:120px;height:28px;background:#000;border-radius:20px;z-index:30}
+    .status{position:absolute;top:14px;left:28px;right:28px;font-size:15px;font-weight:600;z-index:20;display:flex;justify-content:space-between;pointer-events:none}
+    .home-ind{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:128px;height:5px;background:#111;border-radius:99px;opacity:.28;z-index:25}
+    .app{position:absolute;inset:0;padding-top:var(--safe-top);padding-bottom:calc(var(--safe-bottom)+var(--tab-h));display:flex;flex-direction:column}
+    .app.no-tab{padding-bottom:var(--safe-bottom)}.app.no-tab .tabbar{display:none}
+    .screen{display:none;flex:1;flex-direction:column;min-height:0}.screen.on{display:flex}
+    .nav{min-height:var(--nav-h);display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;padding:0 8px}
+    .nav.large{flex-direction:column;align-items:stretch;min-height:auto;padding:4px 16px 8px}
+    .nav .t{font-weight:600;font-size:17px;max-width:58%;text-align:center}
+    .nav.large .t{font-size:34px;font-weight:700;max-width:none;text-align:left;margin-top:4px;letter-spacing:-.03em}
+    .nav .back{position:absolute;left:4px;border:0;background:0;color:var(--blue-ios);font-size:17px;padding:10px 12px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:2px}
+    .nav .back svg{width:12px;height:20px}
+    .content{flex:1;overflow-y:auto;padding:0 16px 20px}
+    .group{background:var(--surface);border-radius:var(--radius);overflow:hidden}
+    .row{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:11px 16px;border:0;background:var(--surface);text-align:left;font:inherit;color:inherit;cursor:pointer;position:relative}
+    .row:active{background:#e5e5ea}.row.static{cursor:default}.row.static:active{background:var(--surface)}
+    .row+.row::before{content:"";position:absolute;left:16px;right:0;top:0;height:.5px;background:var(--line)}
+    .meta{flex:1;min-width:0}.meta .title{display:block;font-size:17px}.meta .sub{display:block;font-size:13px;color:var(--muted);margin-top:1px;line-height:1.3}
+    .val{font-size:17px;color:var(--muted);text-align:right}.chev{color:#c7c7cc;font-size:18px}
+    .status-line{font-size:14px;font-weight:600;color:var(--green-ink);margin:0 0 12px}.status-line.warn{color:var(--amber)}
+    .hero-cta{display:none;width:100%;border:0;border-radius:12px;background:var(--blue);color:#fff;padding:18px 16px;margin-bottom:14px;text-align:left;font:inherit;cursor:pointer}
+    .hero-cta.show{display:block}.hero-cta strong{display:block;font-size:17px}.hero-cta span{display:block;font-size:13px;opacity:.9;margin-top:4px}
+    .device-card{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border:0;background:var(--surface);text-align:left;font:inherit;cursor:pointer;position:relative}
+    .device-card+.device-card::before{content:"";position:absolute;left:62px;right:0;top:0;height:.5px;background:var(--line)}
+    .device-card:active{background:#e8e8ed}.device-card.warn{background:var(--amber-bg)}
+    .device-card .ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;color:#fff;flex-shrink:0;background:#5ac8fa}
+    .device-card .ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .device-card .body{flex:1;min-width:0}
+    .device-card .name{display:block;font-size:17px;font-weight:600}
+    .device-card .sub{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+    .device-card.warn .sub{color:var(--amber)}
+    .device-card .trail{font-size:13px;font-weight:600;color:var(--muted);text-align:right;flex-shrink:0}
+    .device-card.warn .trail{color:var(--amber)}
+    .toggle{width:51px;height:31px;border-radius:999px;border:0;background:#e9e9eb;position:relative;cursor:pointer;padding:0;flex-shrink:0}
+    .toggle.on{background:var(--green)}
+    .toggle::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15);transition:transform .15s}
+    .toggle.on::after{transform:translateX(20px)}
+    .callout{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+    .callout.warn{background:var(--amber-bg)}
+    .callout h3{margin:0 0 6px;font-size:17px;font-weight:600}.callout p{margin:0;font-size:15px;color:var(--muted);line-height:1.4}
+    .footer-note{font-size:13px;color:var(--muted);line-height:1.35;margin:10px 0 0}
+    .btn{width:100%;border:0;border-radius:12px;padding:15px;font-size:17px;font-weight:600;cursor:pointer;font-family:inherit}
+    .btn.primary{background:var(--blue);color:#fff}.btn.secondary{background:var(--surface);color:var(--blue-ios);box-shadow:0 0 0 .5px var(--line);margin-top:8px}
+    .toast{position:absolute;left:50%;bottom:calc(var(--tab-h)+var(--safe-bottom)+16px);transform:translateX(-50%) translateY(16px);opacity:0;background:rgba(30,30,30,.92);color:#fff;border-radius:12px;padding:12px 18px;font-size:15px;font-weight:500;z-index:50;pointer-events:none;transition:.2s;max-width:86%;text-align:center}
+    .app.no-tab .toast{bottom:calc(var(--safe-bottom)+24px)}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+    .center .ok{width:64px;height:64px;border-radius:50%;background:#e8f8ed;color:var(--green);display:grid;place-items:center;font-size:28px;margin-bottom:16px}
+    .center h2{margin:0 0 8px;font-size:22px}.center p{margin:0 0 20px;font-size:15px;color:var(--muted);max-width:260px;line-height:1.4}
+    .tabbar{position:absolute;left:0;right:0;bottom:0;height:calc(var(--tab-h)+var(--safe-bottom));padding:6px 0 var(--safe-bottom);background:rgba(249,249,249,.94);border-top:.5px solid var(--line);display:flex;z-index:20}
+    .tabbar button{flex:1;border:0;background:0;color:var(--muted);font-size:10px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font-family:inherit}
+    .tabbar button.on{color:var(--blue)}
+    .tabbar button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+    .side-col{width:min(300px,100%);display:flex;flex-direction:column;gap:12px}
+    .inspector{background:rgba(15,23,42,.55);border:1px solid rgba(148,163,184,.22);border-radius:16px;padding:14px;color:#e2e8f0}
+    .inspector h3{margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8}
+    .inspector pre{margin:0;font-size:11px;line-height:1.5;color:#cbd5e1;white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace}
+    .inspector .legend{margin-top:10px;font-size:11px;color:#94a3b8;line-height:1.4}
+    .accept{margin-top:8px;padding-top:8px;border-top:1px solid rgba(148,163,184,.2);font-size:11px;color:#94a3b8;line-height:1.45}
+    .accept li{margin:4px 0}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="chrome">
+      <h1>Devices v0 — eng acceptance cut</h1>
+      <p><strong>Make the cuff talk to the phone every week.</strong> Pair · Transfer · Schedule. Nothing else.</p>
+      <div class="cut">
+        <strong>Cut from this build (vs full 10×):</strong> Display · Rename · Remove · day matrix · second time ·
+        ECG/AFib/apps “More” · multi-category pair museum · S3–S9 scenario theater.
+        Full catalog stays at <code style="color:#7dd3fc">/devices/</code>.
+      </div>
+      <div class="metric">North-star metric: % of paired devices with a transfer in the last 7 days</div>
+      <div class="scenario-block">
+        <h2>Acceptance scenarios only</h2>
+        <div class="state-toggle" id="state-toggle">
+          <button type="button" class="on" data-state="ready"><b>S0 Ready</b><em>1 device · schedule on · transferred</em></button>
+          <button type="button" data-state="empty"><b>S1 Empty</b><em>Hero Add device</em></button>
+          <button type="button" data-state="attention"><b>S2 Needs attention</b><em>Fix connection → transfer</em></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="phone"><div class="sw">
+        <div class="notch"></div>
+        <div class="status"><span>9:41</span><span>●●●● Wi‑Fi</span></div>
+        <div class="app" id="app">
+
+          <!-- ROOT -->
+          <section class="screen on" id="s-devices">
+            <div class="nav large"><div class="t">Devices</div></div>
+            <div class="content">
+              <p class="status-line" id="status-line">Ready · last transfer 2h ago</p>
+              <button type="button" class="hero-cta" id="hero-cta" data-go="add">
+                <strong>Add a device</strong>
+                <span>Pair a monitor to start measuring</span>
+              </button>
+              <div class="group" id="device-list"></div>
+              <div class="group" id="add-row" style="margin-top:18px">
+                <button class="row" data-go="add">
+                  <span class="meta"><span class="title">Add device</span></span><span class="chev">›</span>
+                </button>
+              </div>
+              <p class="footer-note">No More section. No Display. No Rename. Model name is the label.</p>
+            </div>
+          </section>
+
+          <!-- DETAIL: transfer + schedule only -->
+          <section class="screen" id="s-detail">
+            <div class="nav">
+              <button class="back" data-go="devices"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Devices</button>
+              <div class="t" id="detail-title">BP Monitor</div>
+            </div>
+            <div class="content">
+              <div class="callout warn" id="detail-attention" style="display:none">
+                <h3>Needs attention</h3>
+                <p>This device must reconnect before new readings can transfer.</p>
+                <button class="btn primary" style="margin-top:12px" data-action="fix">Fix connection</button>
+              </div>
+              <div class="group">
+                <button class="row" data-action="transfer">
+                  <span class="meta">
+                    <span class="title">Transfer now</span>
+                    <span class="sub" id="detail-last">Last transfer 2h ago</span>
+                  </span>
+                  <span class="chev">›</span>
+                </button>
+                <button class="row" data-go="schedule">
+                  <span class="meta">
+                    <span class="title">Measure schedule</span>
+                    <span class="sub">Remind when a reading is due</span>
+                  </span>
+                  <span class="val" id="detail-sched">On · 8:00</span>
+                  <span class="chev">›</span>
+                </button>
+              </div>
+              <p class="footer-note">v0 detail = two jobs. Display / rename / remove ship later if metrics force them.</p>
+            </div>
+          </section>
+
+          <!-- SCHEDULE: on/off + one time + smart skip. No day matrix. -->
+          <section class="screen" id="s-schedule">
+            <div class="nav">
+              <button class="back" data-go="detail"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Device</button>
+              <div class="t">Measure schedule</div>
+            </div>
+            <div class="content">
+              <div class="callout">
+                <h3>Remind me to measure</h3>
+                <p>Default: every day · one time · skip if already measured. No day picker in v0.</p>
+              </div>
+              <div class="group">
+                <div class="row static">
+                  <span class="meta"><span class="title">Schedule</span></span>
+                  <button type="button" class="toggle on" id="t-sched"></button>
+                </div>
+                <button class="row" id="row-time" data-action="cycle-time">
+                  <span class="meta"><span class="title">Time</span><span class="sub">Tap to cycle demo times</span></span>
+                  <span class="val" id="v-time">8:00 AM</span>
+                  <span class="chev">›</span>
+                </button>
+                <div class="row static">
+                  <span class="meta">
+                    <span class="title">Skip if already measured</span>
+                    <span class="sub">Don’t notify when a reading exists</span>
+                  </span>
+                  <button type="button" class="toggle on" id="t-skip"></button>
+                </div>
+              </div>
+              <p class="footer-note">Second time + day matrix = later. Notification: “Time to measure BP” · Measure / Skip.</p>
+            </div>
+          </section>
+
+          <!-- PAIR: one door, one path -->
+          <section class="screen" id="s-add">
+            <div class="nav">
+              <button class="back" data-go="devices"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Devices</button>
+              <div class="t">Add device</div>
+            </div>
+            <div class="content">
+              <div class="callout">
+                <h3>Turn on Bluetooth</h3>
+                <p>Put the monitor in pairing mode. One path — no category museum in v0 (auto-detect or single BP path).</p>
+              </div>
+              <button class="btn primary" data-action="search">Search for device</button>
+            </div>
+          </section>
+
+          <section class="screen" id="s-pairing">
+            <div class="nav">
+              <button class="back" data-go="add"><svg viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Add</button>
+              <div class="t">Searching</div>
+            </div>
+            <div class="content">
+              <div class="center" style="min-height:300px">
+                <div class="ok" style="background:var(--blue);color:#fff;animation:pulse 1.2s infinite">…</div>
+                <h2>Looking for monitor</h2>
+                <p>Keep the device close with Bluetooth on.</p>
+                <button class="btn primary" style="max-width:240px" data-action="found">Simulate found</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="screen" id="s-pair-done">
+            <div class="center">
+              <div class="ok">✓</div>
+              <h2>Device connected</h2>
+              <p>BP Monitor is ready. First transfer is the real success.</p>
+              <button class="btn primary" style="max-width:280px" data-action="offer-sched">Set daily measure at 8:00?</button>
+              <button class="btn secondary" style="max-width:280px" data-action="skip-sched">Not now</button>
+            </div>
+          </section>
+
+          <section class="screen" id="s-transfer">
+            <div class="center">
+              <div class="ok" style="background:var(--blue);color:#fff">↻</div>
+              <h2>Transferring…</h2>
+              <p>Getting readings from BP Monitor.</p>
+              <button class="btn primary" style="max-width:240px;margin-top:12px" data-action="transfer-done">Simulate success</button>
+            </div>
+          </section>
+
+          <nav class="tabbar">
+            <button type="button" data-action="toast" data-toast="Home (downstream of Devices)"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9z"/></svg>Home</button>
+            <button type="button" class="on" data-go="devices"><svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M10 18h4"/></svg>Devices</button>
+            <button type="button" data-action="toast" data-toast="Share starves without transfers"><svg viewBox="0 0 24 24"><path d="M8 12h12M14 6l6 6-6 6"/><path d="M4 6v12"/></svg>Share</button>
+            <button type="button" data-action="toast" data-toast="Profile deep-links here"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 19c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>Profile</button>
+          </nav>
+        </div>
+        <div class="toast" id="toast"></div>
+        <div class="home-ind"></div>
+      </div></div>
+
+      <div class="side-col">
+        <aside class="inspector">
+          <h3>PR acceptance</h3>
+          <pre id="insp">—</pre>
+          <ol class="accept">
+            <li>S1 empty → hero Add</li>
+            <li>Pair → list row (not stranded maze)</li>
+            <li>Optional 8:00 schedule offer</li>
+            <li>S2 Fix connection clears amber</li>
+            <li>Transfer now updates last transfer</li>
+            <li>Schedule = on/off + 1 time + smart skip</li>
+            <li>No Display / Rename / More on path</li>
+          </ol>
+          <p class="legend">Outside phone · not product UI</p>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TIMES = ["8:00 AM", "7:00 AM", "9:00 AM", "6:30 AM"];
+    let timeIdx = 0;
+    let device = null; // null = empty
+    let scenario = "ready";
+    let screen = "devices";
+
+    function toast(m) {
+      const el = document.getElementById("toast");
+      el.textContent = m;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.remove("show"), 2200);
+    }
+
+    function defaultDevice(overrides = {}) {
+      return {
+        name: "BP Monitor",
+        model: "HEM-7156",
+        last: "2h ago",
+        lastHours: 2,
+        schedule: true,
+        time: "8:00 AM",
+        attention: false,
+        ...overrides,
+      };
+    }
+
+    function go(id) {
+      screen = id;
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("on"));
+      const el = document.getElementById("s-" + id) || document.getElementById("s-devices");
+      el.classList.add("on");
+      document.getElementById("app").classList.toggle("no-tab", id !== "devices");
+      const c = el.querySelector(".content");
+      if (c) c.scrollTop = 0;
+      if (id === "devices") renderList();
+      if (id === "detail" || id === "schedule") syncDetail();
+      insp();
+    }
+
+    function renderList() {
+      const list = document.getElementById("device-list");
+      const empty = !device;
+      document.getElementById("hero-cta").classList.toggle("show", empty);
+      document.getElementById("add-row").style.display = empty ? "none" : "";
+      list.style.display = empty ? "none" : "";
+
+      const sl = document.getElementById("status-line");
+      if (empty) {
+        sl.textContent = "Add a device to get started";
+        sl.classList.add("warn");
+        list.innerHTML = "";
+      } else if (device.attention) {
+        sl.textContent = "Needs attention · fix connection";
+        sl.classList.add("warn");
+        list.innerHTML = cardHtml(device);
+      } else {
+        sl.textContent = `Ready · last transfer ${device.last}`;
+        sl.classList.remove("warn");
+        list.innerHTML = cardHtml(device);
+      }
+
+      list.querySelectorAll("[data-open]").forEach(b =>
+        b.addEventListener("click", () => go("detail"))
+      );
+    }
+
+    function cardHtml(d) {
+      const warn = d.attention || d.lastHours > 72;
+      const trail = d.attention
+        ? "Needs attention"
+        : d.schedule
+          ? `On · ${d.time.replace(" AM", "").replace(" PM", "")}`
+          : "No schedule";
+      const sub = d.attention
+        ? "Fix connection to transfer"
+        : `${d.model} · last transfer ${d.last}`;
+      return `<button type="button" class="device-card${warn ? " warn" : ""}" data-open="1">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M4 14h4l2-4 2 8 2-4h6"/></svg></span>
+        <span class="body"><span class="name">${d.name}</span><span class="sub">${sub}</span></span>
+        <span class="trail">${trail}</span><span class="chev">›</span>
+      </button>`;
+    }
+
+    function syncDetail() {
+      if (!device) return;
+      document.getElementById("detail-title").textContent = device.name;
+      document.getElementById("detail-last").textContent = device.attention
+        ? "Cannot transfer until fixed"
+        : `Last transfer ${device.last}`;
+      document.getElementById("detail-sched").textContent = device.schedule
+        ? `On · ${device.time.replace(" AM", "").replace(" PM", "")}`
+        : "Off";
+      document.getElementById("detail-attention").style.display = device.attention ? "" : "none";
+      document.getElementById("t-sched").classList.toggle("on", device.schedule);
+      document.getElementById("v-time").textContent = device.time;
+      document.getElementById("row-time").style.opacity = device.schedule ? "1" : ".45";
+    }
+
+    function insp() {
+      document.getElementById("insp").textContent = [
+        `scenario:  ${scenario}`,
+        `screen:    ${screen}`,
+        `device:    ${device ? device.name + " (" + device.model + ")" : "none"}`,
+        `attention: ${device ? device.attention : "—"}`,
+        `last:      ${device ? device.last : "—"}`,
+        `schedule:  ${device ? (device.schedule ? device.time : "off") : "—"}`,
+        `skip:      on (default)`,
+      ].join("\n");
+    }
+
+    function applyScenario(name) {
+      scenario = name;
+      document.querySelectorAll("#state-toggle button").forEach(b =>
+        b.classList.toggle("on", b.dataset.state === name)
+      );
+      timeIdx = 0;
+      switch (name) {
+        case "empty":
+          device = null;
+          go("devices");
+          break;
+        case "attention":
+          device = defaultDevice({
+            attention: true,
+            last: "—",
+            lastHours: 999,
+            schedule: true,
+          });
+          go("devices");
+          break;
+        default:
+          device = defaultDevice();
+          go("devices");
+      }
+      renderList();
+      syncDetail();
+      insp();
+    }
+
+    document.body.addEventListener("click", e => {
+      const g = e.target.closest("[data-go]");
+      if (g && !e.target.closest(".toggle") && !e.target.closest("#state-toggle")) {
+        go(g.dataset.go);
+        return;
+      }
+      const act = e.target.closest("[data-action]");
+      if (!act) return;
+      const a = act.dataset.action;
+      if (a === "toast") toast(act.dataset.toast || "Demo");
+      if (a === "search") go("pairing");
+      if (a === "found") {
+        device = defaultDevice({
+          last: "Not yet transferred",
+          lastHours: 999,
+          schedule: false,
+          attention: false,
+        });
+        go("pair-done");
+      }
+      if (a === "offer-sched") {
+        if (device) {
+          device.schedule = true;
+          device.time = "8:00 AM";
+        }
+        toast("Daily measure at 8:00 on");
+        go("devices");
+      }
+      if (a === "skip-sched") {
+        toast("You can set schedule later");
+        go("devices");
+      }
+      if (a === "fix") {
+        if (device) {
+          device.attention = false;
+          device.last = "Just now";
+          device.lastHours = 0;
+        }
+        toast("Connection fixed");
+        syncDetail();
+        renderList();
+        go("detail");
+      }
+      if (a === "transfer") {
+        if (device && device.attention) {
+          toast("Fix connection first");
+          return;
+        }
+        go("transfer");
+      }
+      if (a === "transfer-done") {
+        if (device) {
+          device.last = "Just now";
+          device.lastHours = 0;
+        }
+        toast("12 readings transferred");
+        go("detail");
+      }
+      if (a === "cycle-time") {
+        if (!device || !device.schedule) return;
+        timeIdx = (timeIdx + 1) % TIMES.length;
+        device.time = TIMES[timeIdx];
+        syncDetail();
+        renderList();
+      }
+    });
+
+    document.getElementById("t-sched").addEventListener("click", function () {
+      if (!device) return;
+      device.schedule = !device.schedule;
+      this.classList.toggle("on", device.schedule);
+      syncDetail();
+      renderList();
+    });
+    document.getElementById("t-skip").addEventListener("click", function () {
+      this.classList.toggle("on");
+    });
+    document.getElementById("state-toggle").addEventListener("click", e => {
+      const b = e.target.closest("[data-state]");
+      if (b) applyScenario(b.dataset.state);
+    });
+
+    applyScenario("ready");
+  </script>
+</body>
+</html>
