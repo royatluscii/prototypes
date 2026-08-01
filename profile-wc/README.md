@@ -15,6 +15,7 @@ Same information architecture and S0–S9 scenarios — elevated craft on **ever
 | Devices | Empty state illustration, device **hero** art + Transfer now, pairing steps 1–2–3 |
 | Account | Clear cloud / sign-in / danger hierarchy; polished sheets |
 | Settings / Help | FAQ cards, video row, Premium plan card, About mark |
+| Support (P-53) | Care hierarchy: call/email + hours, self-serve, privacy, feedback, emergency line |
 | System | Screen transitions, toast with check, 8pt grid, larger type on fields |
 
 ## Scenarios (S0–S9)
@@ -30,7 +31,7 @@ Same information architecture and S0–S9 scenarios — elevated craft on **ever
 | S6 Delete | Delete confirm | Checkbox gate |
 | S7 Add device | Pairing | Steps + device types |
 | S8 Schedule | Measure schedule | Day chips on device |
-| S9 Help | Help hub | FAQ / manuals / contact |
+| S9 Help | Help hub | FAQ / manuals / support |
 
 ## Screen codes
 
