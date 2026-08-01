@@ -47,8 +47,15 @@
     .nav .back svg{width:12px;height:20px}
     .content{flex:1;overflow-y:auto;padding:0 16px 20px}
     .status-line{font-size:14px;font-weight:600;color:var(--green-ink);margin:0 0 12px}.status-line.warn{color:var(--amber)}.status-line.muted{color:var(--muted);font-weight:500}
-    .hero-cta{display:none;width:100%;border:0;border-radius:14px;background:var(--blue);color:#fff;padding:18px 16px;margin-bottom:14px;text-align:left;font:inherit;cursor:pointer}
+    .hero-cta{display:none;width:100%;border:0;border-radius:14px;background:var(--blue);color:#fff;padding:18px 16px;margin-bottom:10px;text-align:left;font:inherit;cursor:pointer}
     .hero-cta.show{display:block}.hero-cta strong{display:block;font-size:17px}.hero-cta span{display:block;font-size:13px;opacity:.9;margin-top:4px}
+    .empty-buy{display:none;width:100%;border:0;background:0;padding:8px 4px 14px;margin:0 0 4px;text-align:center;font:inherit;cursor:pointer;color:var(--muted)}
+    .empty-buy.show{display:block}
+    .empty-buy .line{font-size:14px;line-height:1.4}
+    .empty-buy .link{color:var(--blue-ios);font-weight:600;text-decoration:none}
+    .empty-buy:active .link{opacity:.7}
+    .empty-pair-hint{display:none;font-size:13px;color:var(--muted);text-align:center;margin:-4px 0 14px;line-height:1.35}
+    .empty-pair-hint.show{display:block}
     /* Fat status card — is the action surface */
     .dev-card{background:var(--surface);border-radius:var(--radius);padding:14px 14px 12px;margin-bottom:12px;box-shadow:0 0 0 .5px var(--line)}
     .dev-card.warn{background:var(--amber-bg);box-shadow:0 0 0 1px rgba(178,80,0,.25)}
@@ -147,7 +154,7 @@
         <h2>Physics scenarios</h2>
         <div class="state-toggle" id="state-toggle">
           <button type="button" class="on" data-state="healthy"><b>H0 Healthy</b><em>Auto-sync · boring Devices</em></button>
-          <button type="button" data-state="empty"><b>H1 Empty</b><em>Hero Add only</em></button>
+          <button type="button" data-state="empty"><b>H1 Empty</b><em>Add · secondary Buy</em></button>
           <button type="button" data-state="broken"><b>H2 Broken</b><em>Fix → reading</em></button>
           <button type="button" data-state="stale"><b>H3 Stale</b><em>Manual transfer rare</em></button>
           <button type="button" data-state="due"><b>H4 Due</b><em>Home + notification</em></button>
@@ -204,6 +211,10 @@
               <button type="button" class="hero-cta" id="hero-cta" data-go="add">
                 <strong>Add a device</strong>
                 <span>Pair a monitor — first reading is success</span>
+              </button>
+              <p class="empty-pair-hint" id="empty-pair-hint">Already have a monitor? Pair it above.</p>
+              <button type="button" class="empty-buy" id="empty-buy" data-action="buy">
+                <span class="line">Need one? <span class="link">Buy an OMRON monitor →</span></span>
               </button>
               <div id="device-host"></div>
               <div class="group" id="add-row" style="margin-top:6px">
@@ -467,9 +478,14 @@
       document.getElementById("home-week").textContent = `${device.readingCountWeek} readings`;
     }
 
+    // External store — not an in-app mall. Return path = Add device / pair.
+    const BUY_URL = "https://www.omronhealthcare.com/en/blood-pressure-monitors";
+
     function renderDevices() {
       const empty = !device;
       document.getElementById("hero-cta").classList.toggle("show", empty);
+      document.getElementById("empty-buy").classList.toggle("show", empty);
+      document.getElementById("empty-pair-hint").classList.toggle("show", empty);
       document.getElementById("add-row").style.display = empty ? "none" : "";
       const host = document.getElementById("device-host");
       const sl = document.getElementById("status-line");
@@ -479,7 +495,7 @@
         sl.textContent = "Add a device to get started";
         sl.className = "status-line warn";
         host.innerHTML = "";
-        note.textContent = "Empty must look unfinished. One job: Add.";
+        note.textContent = "Shop only on empty: secondary Buy → external store. No shop on healthy/broken/stale.";
         return;
       }
 
@@ -579,6 +595,7 @@
         `prompt→read:  ${metrics.promptToReading}`,
         `re-reg→read:  ${metrics.reregToReading}`,
         `Devices opens:${metrics.devicesOpens}`,
+        `buy taps:     ${metrics.buyTaps || 0} (empty only)`,
         `last event:   ${metrics.lastEvent}`,
       ].join("\n");
 
@@ -669,6 +686,14 @@
       const a = act.dataset.action;
 
       if (a === "toast") toast(act.dataset.toast || "Demo");
+      if (a === "buy") {
+        metrics.lastEvent = "empty → Buy (external store)";
+        metrics.buyTaps = (metrics.buyTaps || 0) + 1;
+        toast("Opens store in browser · return to Add device to pair");
+        insp();
+        window.open(BUY_URL, "_blank", "noopener,noreferrer");
+        return;
+      }
       if (a === "open-fix") go("fix");
       if (a === "fix-reconnect") {
         metrics.lastEvent = "fix reconnect";
