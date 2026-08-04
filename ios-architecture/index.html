@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>OMRON Connect iOS — Architecture Explorer</title>
+<style>
+:root {
+  --bg: #0b0f14;
+  --bg2: #12181f;
+  --bg3: #1a222d;
+  --bg4: #243040;
+  --text: #e8eef5;
+  --muted: #8b98a8;
+  --border: #2a3544;
+  --accent: #4da3ff;
+  --flow: #f0c14a;
+  --hi: #ffffff;
+  --t0: #ff5c5c;
+  --t1: #ff9f43;
+  --t2: #f6d365;
+  --app: #4da3ff;
+  --service: #3ecf8e;
+  --feature: #c792ea;
+  --ui: #7ec8ff;
+  --database: #ff9f43;
+  --external: #ff6b6b;
+  --config: #9ad0ff;
+  --domain: #69db7c;
+  --observability: #ffb347;
+  --package: #ff8e8e;
+  --shadow: 0 12px 40px rgba(0,0,0,.45);
+  --radius: 10px;
+  --font: "Segoe UI", ui-sans-serif, system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; height:100%; background:var(--bg); color:var(--text); font-family:var(--font); }
+header {
+  display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; justify-content:space-between;
+  padding:12px 18px; background:linear-gradient(180deg, #141b24, var(--bg2));
+  border-bottom:1px solid var(--border); position:sticky; top:0; z-index:30;
+  box-shadow: 0 1px 0 rgba(255,255,255,.03);
+}
+header .brand h1 { margin:0; font-size:15px; font-weight:650; letter-spacing:.01em; }
+header .brand .meta { color:var(--muted); font-size:11px; font-family:var(--mono); margin-top:3px; }
+.stats { display:flex; flex-wrap:wrap; gap:6px; }
+.chip {
+  font-size:11px; padding:4px 8px; border-radius:999px; background:var(--bg3);
+  border:1px solid var(--border); color:var(--muted); white-space:nowrap;
+}
+.chip strong { color:var(--text); font-weight:600; }
+.controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.controls input, .controls select, .controls button {
+  background:var(--bg3); color:var(--text); border:1px solid var(--border);
+  border-radius:8px; padding:7px 11px; font-size:12px;
+}
+.controls button { cursor:pointer; transition: border-color .15s, background .15s; }
+.controls button:hover { border-color:var(--accent); background:var(--bg4); }
+.controls input { min-width:170px; }
+main {
+  display:grid; grid-template-columns: 1fr minmax(280px, 360px);
+  height: calc(100% - 62px);
+}
+@media (max-width: 960px) {
+  main { grid-template-columns: 1fr; grid-template-rows: minmax(50vh, 1fr) minmax(280px, 42vh); }
+  aside { border-left:none; border-top:1px solid var(--border); }
+}
+#canvas-wrap {
+  position:relative; overflow:hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 10%, rgba(77,163,255,.08), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 85% 80%, rgba(240,193,74,.05), transparent 45%),
+    linear-gradient(180deg, #0d1218 0%, var(--bg) 100%);
+}
+#canvas-wrap::before {
+  content:""; position:absolute; inset:0; pointer-events:none; opacity:.35;
+  background-image:
+    linear-gradient(rgba(42,53,68,.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(42,53,68,.35) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+}
+svg#map { width:100%; height:100%; cursor:grab; touch-action:none; position:relative; z-index:1; }
+svg#map.dragging { cursor:grabbing; }
+.legend {
+  position:absolute; left:12px; bottom:12px; z-index:5;
+  background:rgba(18,24,31,.94); border:1px solid var(--border); border-radius:var(--radius);
+  padding:10px 12px; font-size:11px; max-width:230px; backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
+}
+.legend h3 { margin:0 0 6px; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+.legend .row { display:flex; align-items:center; gap:8px; margin:3px 0; color:var(--text); }
+.swatch { width:10px; height:10px; border-radius:3px; flex:none; }
+.legend .hint { margin-top:8px; color:var(--muted); line-height:1.4; font-size:10px; }
+aside {
+  border-left:1px solid var(--border); background:var(--bg2); overflow:auto;
+  padding:0; display:flex; flex-direction:column;
+}
+.aside-head {
+  padding:14px 16px 10px; border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg, #161e28, var(--bg2));
+  position:sticky; top:0; z-index:2;
+}
+.aside-head h2 { margin:0 0 4px; font-size:14px; font-weight:650; }
+.aside-head p { margin:0; font-size:12px; color:var(--muted); line-height:1.45; }
+.aside-body { padding:14px 16px 24px; flex:1; }
+aside h3 {
+  margin:16px 0 8px; font-size:10px; color:var(--muted);
+  text-transform:uppercase; letter-spacing:.07em; font-weight:650;
+}
+aside h3:first-child { margin-top:0; }
+aside p, aside li { font-size:12.5px; line-height:1.5; }
+aside ul, aside ol { margin:0; padding-left:18px; }
+aside code {
+  font-family:var(--mono); font-size:10.5px; color:var(--muted);
+  word-break:break-all;
+}
+.tag {
+  display:inline-block; font-size:10px; padding:2px 7px; border-radius:999px;
+  background:var(--bg3); border:1px solid var(--border); color:var(--muted); margin:2px 4px 2px 0;
+}
+.tag.risk-T0 { color:#ffc9c9; border-color:rgba(255,92,92,.45); background:rgba(255,92,92,.12); }
+.tag.risk-T1 { color:#ffe0b8; border-color:rgba(255,159,67,.45); background:rgba(255,159,67,.12); }
+.tag.risk-T2 { color:#fff1c2; border-color:rgba(246,211,101,.4); background:rgba(246,211,101,.1); }
+.flow-btn {
+  display:block; width:100%; text-align:left; margin:0 0 8px; padding:10px 12px;
+  background:var(--bg3); border:1px solid var(--border); border-radius:10px; color:var(--text);
+  cursor:pointer; font-size:12px; transition: border-color .15s, box-shadow .15s, transform .1s;
+}
+.flow-btn:hover { border-color: rgba(240,193,74,.55); transform: translateY(-1px); }
+.flow-btn.active {
+  border-color: var(--flow);
+  box-shadow: 0 0 0 1px var(--flow) inset, 0 0 20px rgba(240,193,74,.12);
+  background: linear-gradient(135deg, rgba(240,193,74,.1), var(--bg3));
+}
+.flow-btn .title { display:flex; align-items:center; gap:8px; font-weight:600; margin-bottom:4px; }
+.flow-btn .dot { width:8px; height:8px; border-radius:50%; flex:none; }
+.flow-btn .badge { color:var(--muted); font-size:11px; line-height:1.4; font-weight:400; }
+.path-step {
+  display:flex; gap:8px; align-items:flex-start; padding:6px 0;
+  border-bottom:1px solid rgba(42,53,68,.6); font-size:12px;
+}
+.path-step .n {
+  flex:none; width:20px; height:20px; border-radius:50%;
+  background:var(--bg4); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; color:var(--muted); font-family:var(--mono);
+}
+.path-step.active-step .n { background:rgba(240,193,74,.2); border-color:var(--flow); color:var(--flow); }
+.empty { color:var(--muted); font-size:12px; }
+.overview-card {
+  background:var(--bg3); border:1px solid var(--border); border-radius:10px;
+  padding:10px 12px; margin-bottom:10px; font-size:12px; line-height:1.45;
+}
+.overview-card strong { color:var(--text); }
+/* nodes / edges */
+.node { cursor:pointer; }
+.node rect {
+  stroke-width:1.6; transition: stroke .15s, filter .15s, opacity .15s, fill .15s;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.25));
+}
+.node text { fill:var(--text); font-size:11px; pointer-events:none; font-weight:600; }
+.node .sub { fill:var(--muted); font-size:9px; font-weight:400; }
+.node.dim { opacity:.14; }
+.node.hi rect {
+  stroke:#fff !important; stroke-width:2.25;
+  filter: drop-shadow(0 0 10px rgba(77,163,255,.55));
+}
+.node.flow-hi rect {
+  stroke: var(--flow) !important; stroke-width:2.4;
+  filter: drop-shadow(0 0 12px rgba(240,193,74,.55));
+  fill: #1c2430;
+}
+.edge {
+  fill:none; stroke:#3a4656; stroke-width:1.2; opacity:.7;
+  transition: opacity .15s, stroke .15s, stroke-width .15s;
+}
+.edge.dim { opacity:.04; }
+.edge.hi { stroke:var(--accent); stroke-width:2.1; opacity:1; }
+.edge.flow {
+  stroke:var(--flow); stroke-width:2.6; opacity:1;
+  stroke-dasharray: 8 4;
+  animation: dash 0.9s linear infinite;
+}
+@keyframes dash { to { stroke-dashoffset: -24; } }
+.edge-label { fill:var(--muted); font-size:8.5px; opacity:0; pointer-events:none; }
+.edge.hi ~ .edge-label, .edge.flow ~ .edge-label { opacity:.95; }
+/* tooltip */
+#tooltip {
+  position:fixed; z-index:100; pointer-events:none; max-width:300px;
+  background:rgba(18,24,31,.97); border:1px solid var(--border); border-radius:10px;
+  padding:10px 12px; font-size:12px; box-shadow:var(--shadow);
+  opacity:0; transform: translateY(4px); transition: opacity .12s, transform .12s;
+  backdrop-filter: blur(10px);
+}
+#tooltip.show { opacity:1; transform: translateY(0); }
+#tooltip .tt-title { font-weight:650; margin-bottom:4px; }
+#tooltip .tt-type { font-size:10px; color:var(--muted); margin-bottom:6px; }
+#tooltip .tt-desc { color:var(--text); line-height:1.4; margin-bottom:6px; }
+#tooltip .tt-file { font-family:var(--mono); font-size:10px; color:var(--muted); word-break:break-all; }
+.layer-band text { fill:var(--muted); font-size:10px; letter-spacing:.08em; text-transform:uppercase; opacity:.55; }
+.clear-link {
+  background:none; border:none; color:var(--accent); cursor:pointer;
+  font-size:11px; padding:0; text-decoration:underline;
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>OMRON Connect iOS · Architecture Explorer</h1>
+    <div class="meta" id="metaLine">Loading…</div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="controls">
+    <input id="search" type="search" placeholder="Search components…" autocomplete="off"/>
+    <select id="typeFilter">
+      <option value="">All types</option>
+      <option value="app">App</option>
+      <option value="config">Config</option>
+      <option value="feature">Feature</option>
+      <option value="service">Service</option>
+      <option value="domain">Domain</option>
+      <option value="ui">UI</option>
+      <option value="database">Database</option>
+      <option value="external">External</option>
+      <option value="observability">Observability</option>
+      <option value="package">Package</option>
+    </select>
+    <select id="riskFilter">
+      <option value="">All risk tiers</option>
+      <option value="T0">T0 — catastrophic</option>
+      <option value="T1">T1 — severe</option>
+      <option value="T2">T2 — high</option>
+    </select>
+    <button type="button" id="zoomIn" title="Zoom in">+</button>
+    <button type="button" id="zoomOut" title="Zoom out">−</button>
+    <button type="button" id="fitView" title="Fit">Fit</button>
+    <button type="button" id="resetView" title="Clear selection">Clear</button>
+  </div>
+</header>
+<main>
+  <div id="canvas-wrap">
+    <svg id="map" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#3a4656"/>
+        </marker>
+        <marker id="arrow-hi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#4da3ff"/>
+        </marker>
+        <marker id="arrow-flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#f0c14a"/>
+        </marker>
+        <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <g id="viewport">
+        <g id="bands"></g>
+        <g id="flowPaths"></g>
+        <g id="edges"></g>
+        <g id="nodes"></g>
+      </g>
+    </svg>
+    <div class="legend">
+      <h3>Component types</h3>
+      <div class="row"><span class="swatch" style="background:var(--app)"></span>App shell</div>
+      <div class="row"><span class="swatch" style="background:var(--config)"></span>Config</div>
+      <div class="row"><span class="swatch" style="background:var(--service)"></span>Service</div>
+      <div class="row"><span class="swatch" style="background:var(--domain)"></span>Domain</div>
+      <div class="row"><span class="swatch" style="background:var(--ui)"></span>UI</div>
+      <div class="row"><span class="swatch" style="background:var(--feature)"></span>Feature</div>
+      <div class="row"><span class="swatch" style="background:var(--database)"></span>Persistence</div>
+      <div class="row"><span class="swatch" style="background:var(--external)"></span>Native SDK</div>
+      <div class="row"><span class="swatch" style="background:var(--observability)"></span>Observability</div>
+      <div class="row"><span class="swatch" style="background:var(--package)"></span>Package</div>
+      <div class="hint">Hover for tooltips · click node for details · select a flow (right) to highlight the full path · drag canvas / nodes · scroll to zoom</div>
+    </div>
+  </div>
+  <aside id="detail">
+    <div class="aside-head">
+      <h2>Critical flows</h2>
+      <p>Select a flow to highlight its complete path across the architecture.</p>
+    </div>
+    <div class="aside-body">
+      <div id="overview"></div>
+      <h3>Flows</h3>
+      <div id="flowList"></div>
+      <div id="detailPanel"></div>
+    </div>
+  </aside>
+</main>
+<div id="tooltip"></div>
+<script>
+const DATA = {"repo": "Omron-Connect-iOS", "product": "OMRON Connect (Voltron / Foresight)", "commit": "7ca2815bfb1a1eef874235967063ce1bd771202f", "commitShort": "7ca2815bfb", "branch": "SHA-1551", "generatedAt": "2026-08-04", "schemaVersion": 551, "stats": {"swiftApp": 2366, "features": 7, "moduleManagers": 34, "viewAreas": 78, "nodes": 38, "edges": 74, "flows": 10}, "nodes": {"AppDelegate": {"label": "AppDelegate", "layer": "shell", "type": "app", "file": "Foresight/Foresight/App/AppDelegate.swift", "desc": "Application entry. Launch sequence, DI bootstrap, analytics/consent hooks, window root.", "risk": "T1", "files": 1}, "CoreAppContainer": {"label": "CoreAppContainer", "layer": "shell", "type": "app", "file": "Foresight/Foresight/App/DependencyInjection/CoreAppContainer.swift", "desc": "FactoryKit SharedContainer — app-wide DI root (use cases, env, shared services).", "risk": "T0", "files": 2}, "Splash": {"label": "Splash + Navigation UC", "layer": "shell", "type": "app", "file": "Foresight/Foresight/View/SplashViewController · Common Use Cases/SplashNavigationUseCase.swift", "desc": "Cold-start gate: auth check, Realm open, route to onboarding or dashboard.", "risk": "T1", "files": 8}, "Navigation": {"label": "Coordinators / Nav", "layer": "shell", "type": "app", "file": "Foresight/Foresight/View/Coordinators · Navigation · NavigationManager", "desc": "VoltronCoordinator, URL schemes, push/tab routing to pairing, history, profile.", "risk": "T2", "files": 12}, "RegionConfig": {"label": "RegionManager + Config", "layer": "config", "type": "config", "file": "Module Managers/RegionManager · Configuration/", "desc": "Region settings, AWS/OIDC/OneTrust credentials, environment endpoints (~40 swift in RegionManager).", "risk": "T1", "files": 166}, "FeatureFlags": {"label": "FeatureFlagManager", "layer": "config", "type": "config", "file": "Module Managers/FeatureFlagManager", "desc": "LaunchDarkly remote flags; gates features at runtime.", "risk": "T2", "files": 19}, "SignInUI": {"label": "Sign-In UI / VM", "layer": "auth", "type": "ui", "file": "Features/Onboarding · View/Account", "desc": "Email/password (and related) onboarding views and SignInViewModel.", "risk": "T2", "files": 37}, "OnboardingAuth": {"label": "OnboardingAuthManager", "layer": "auth", "type": "feature", "file": "Features/Onboarding/Authentication/OnboardingAuthenticationManager.swift", "desc": "Login orchestrator: SignInUseCase → tokens → initial profile fetch → navigate home.", "risk": "T0", "files": 8}, "Authentication": {"label": "Authentication (static)", "layer": "auth", "type": "service", "file": "Module Managers/Authentication Manager/Model/Authentication.swift", "desc": "Token gate + login status. Read by every authenticated API call.", "risk": "T0", "files": 8}, "Keychain": {"label": "KeychainStore", "layer": "auth", "type": "service", "file": "Module Managers/Keychain/KeychainStore.swift", "desc": "Sole persistence for access/refresh/id tokens.", "risk": "T0", "files": 2}, "TokenRefresh": {"label": "TokenRefresh + Interceptor", "layer": "auth", "type": "service", "file": "AuthenticationInterceptor · TokenRefreshQueueManager", "desc": "401 handling, single-flight refresh queue, header injection for Alamofire.", "risk": "T0", "files": 4}, "UserProfile": {"label": "UserProfileManager", "layer": "domain", "type": "service", "file": "Data Manager/User Profile Manager/UserProfileManager.swift", "desc": "Current-user cache + profile/device saves into Realm. Stale/nil breaks most features.", "risk": "T0", "files": 2}, "PairingUI": {"label": "Pairing UI + Coordinator", "layer": "ble", "type": "ui", "file": "View/VoltronPairing/VoltronPairingCoordinator · View/Pairing", "desc": "Category/model selection, scan, connect, complete screens.", "risk": "T1", "files": 80}, "DeviceCatalog": {"label": "Device Model Repo", "layer": "ble", "type": "domain", "file": "Features/VoltronDeviceModel · DeviceDefinitionFile", "desc": "Device catalog / JSON definitions used to recognize scanned peripherals.", "risk": "T1", "files": 17}, "Connectivity": {"label": "ConnectivityManager", "layer": "ble", "type": "service", "file": "Module Managers/Connectivity Manager/ConnectivityManager.swift", "desc": "BLE gateway: OHQ scan/connect/transfer + Sonic. Shared by pair AND read paths.", "risk": "T0", "files": 38}, "ConnectedDevices": {"label": "ConnectedDeviceManager", "layer": "ble", "type": "service", "file": "Data Manager/Device Manager/ConnectedDeviceManager.swift", "desc": "Paired device inventory (.shared singleton — DI migration target).", "risk": "T1", "files": 8}, "OHQ": {"label": "OmronCommunicationLib", "layer": "external", "type": "external", "file": "Foresight/OmronCommunicationLib.xcframework", "desc": "OHQ BLE stack (CoreBluetooth). Primary Omron device communication.", "risk": "T0", "files": 1}, "SonicSDK": {"label": "Sonic + ECG SDKs", "layer": "external", "type": "external", "file": "soniccommunicationlibrary · AliveCorKitLite · ecg* frameworks", "desc": "Thermometer + AliveCor/Omron ECG native frameworks.", "risk": "T1", "files": 5}, "DataTransfer": {"label": "Data Transfer", "layer": "ble", "type": "service", "file": "Connectivity Manager transfer · Manual/AutomationDataTransfer", "desc": "Manual & auto BLE measurement pull into the app.", "risk": "T0", "files": 20}, "VitalParser": {"label": "VitalDataParser", "layer": "domain", "type": "domain", "file": "Data Manager/Vital Data Manager/VitalDataParser.swift", "desc": "Raw BLE dict → typed vital DTOs. Mis-parse = silent wrong-type storage.", "risk": "T0", "files": 1}, "VitalDM": {"label": "VitalDataManager", "layer": "domain", "type": "domain", "file": "Data Manager/Vital Data Manager/VitalDataManager.swift", "desc": "Facade routing BP/Weight/SpO2/Sleep/Temp/Activity/EKG to type managers.", "risk": "T0", "files": 26}, "TypeManagers": {"label": "Per-vital Managers", "layer": "domain", "type": "domain", "file": "Vital Data Manager/{Blood Pressure,Weight,Sleep,...}", "desc": "BloodPressure/Weight/etc data managers + Realm query helpers.", "risk": "T1", "files": 40}, "DataManager": {"label": "DataManager (Realm)", "layer": "data", "type": "database", "file": "Data Manager/DataManager.swift", "desc": "Opens encrypted Realm, schemaVersion 551, migration block. Bad migration = brick.", "risk": "T0", "files": 1}, "RealmProvider": {"label": "RealmProvider", "layer": "data", "type": "database", "file": "Data Manager/Database Provider", "desc": "Foreground/background Realm access helpers for reads/writes.", "risk": "T1", "files": 5}, "DBRepos": {"label": "DB Repositories", "layer": "data", "type": "database", "file": "Data Manager/Database Repository · GetUnsyncedDataUseCase", "desc": "Unsynced queries (syncTimestamp invariant). nil-on-error = silent skip risk.", "risk": "T0", "files": 24}, "RealmModels": {"label": "Realm Models", "layer": "data", "type": "database", "file": "Model/{Vitals,Device,User,EKG,...}", "desc": "ConnectedDevice, vital objects, UserProfile — domain schema.", "risk": "T1", "files": 131}, "WebService": {"label": "WebService", "layer": "cloud", "type": "service", "file": "Cloud Data Manager/Web Services/WebService.swift", "desc": "Alamofire HTTP layer for login, vitals, device, profile APIs.", "risk": "T0", "files": 28}, "CloudDM": {"label": "CloudDataManager", "layer": "cloud", "type": "service", "file": "Data Manager/Cloud Data Manager/CloudDataManager.swift", "desc": "Cloud orchestration (devices, initial details, vital APIs). Still has .shared.", "risk": "T1", "files": 28}, "SyncMgr": {"label": "SynchronizationManager", "layer": "cloud", "type": "service", "file": "Data Manager/Sync Manager/SynchronizationManager.swift", "desc": "Operation queues for push/pull. Last-write-wins; no merge strategy.", "risk": "T0", "files": 43}, "Dashboard": {"label": "Dashboard + Panels", "layer": "ui", "type": "ui", "file": "View/Dashboard · VoltronDashboard · VoltronPanelManager", "desc": "Home tiles, panels, transfer entry points (~344 files).", "risk": "T2", "files": 344}, "HistoryUI": {"label": "History + Graphs", "layer": "ui", "type": "ui", "file": "View/History · RedesignHistory · DGCharts", "desc": "Per-vital history lists/graphs. CRA-172: reloadRows on stale Realm Results (BP).", "risk": "T1", "files": 155}, "ReadingsUC": {"label": "Get Readings UseCases", "layer": "domain", "type": "domain", "file": "Common Use Cases/Get*ReadingsByDateUseCase", "desc": "Date-scoped vital queries feeding dashboard & history VMs.", "risk": "T2", "files": 25}, "EKG": {"label": "EKG Recording", "layer": "feature", "type": "feature", "file": "Features/EKGRecording · View/EKG Recording", "desc": "Mobile ECG / Complete stack; stores via vitals domain.", "risk": "T1", "files": 93}, "HealthKit": {"label": "HealthKit + ConnectedApps", "layer": "feature", "type": "service", "file": "Health App Manager · Features/ConnectedApps", "desc": "Apple Health import/export and third-party connected apps.", "risk": "T2", "files": 43}, "Consent": {"label": "Consent (OneTrust)", "layer": "feature", "type": "feature", "file": "Features/Consent · ConsentManager", "desc": "Privacy consent bootstrap on launch.", "risk": "T2", "files": 30}, "Reminders": {"label": "Reminders & Meds", "layer": "feature", "type": "feature", "file": "RemindersFeature package · Medication/Reminder managers", "desc": "Local notifications, dose reminders, medication tracking.", "risk": "T2", "files": 61}, "Analytics": {"label": "Analytics + Crashlytics", "layer": "obs", "type": "observability", "file": "Analytics Manager · LogKit · Crashlytics", "desc": "OF analytics, LogKit, Crashlytics as sole crash reporter (ADR-003).", "risk": "T2", "files": 11}, "Packages": {"label": "Shared Packages", "layer": "package", "type": "package", "file": "OmronDesignSystem · WebViewKit · CSVKit", "desc": "Design system, in-app web, CSV utilities (local SPM packages).", "risk": "T2", "files": 138}}, "edges": [{"from": "AppDelegate", "to": "CoreAppContainer", "label": "registers DI"}, {"from": "AppDelegate", "to": "Splash", "label": "sets root"}, {"from": "AppDelegate", "to": "Analytics", "label": "init tracking"}, {"from": "AppDelegate", "to": "Consent", "label": "privacy bootstrap"}, {"from": "AppDelegate", "to": "DataManager", "label": "open Realm"}, {"from": "CoreAppContainer", "to": "RegionConfig", "label": "config factories"}, {"from": "CoreAppContainer", "to": "WebService", "label": "HTTP client"}, {"from": "CoreAppContainer", "to": "SyncMgr", "label": "sync service"}, {"from": "CoreAppContainer", "to": "Connectivity", "label": "BLE bridge"}, {"from": "CoreAppContainer", "to": "CloudDM", "label": "cloud APIs"}, {"from": "CoreAppContainer", "to": "UserProfile", "label": "profile"}, {"from": "Splash", "to": "Authentication", "label": "checkLoggedIn"}, {"from": "Splash", "to": "DataManager", "label": "ensure DB"}, {"from": "Splash", "to": "Navigation", "label": "route next"}, {"from": "Splash", "to": "RegionConfig", "label": "region gate"}, {"from": "Navigation", "to": "Dashboard", "label": "home"}, {"from": "Navigation", "to": "PairingUI", "label": "pair flow"}, {"from": "Navigation", "to": "HistoryUI", "label": "history"}, {"from": "Navigation", "to": "EKG", "label": "record ECG"}, {"from": "RegionConfig", "to": "WebService", "label": "endpoints/env"}, {"from": "RegionConfig", "to": "Consent", "label": "OneTrust keys"}, {"from": "RegionConfig", "to": "FeatureFlags", "label": "LD context"}, {"from": "FeatureFlags", "to": "Dashboard", "label": "feature gates"}, {"from": "SignInUI", "to": "OnboardingAuth", "label": "submit creds"}, {"from": "OnboardingAuth", "to": "WebService", "label": "login / OIDC"}, {"from": "OnboardingAuth", "to": "Authentication", "label": "save tokens"}, {"from": "OnboardingAuth", "to": "UserProfile", "label": "initial profile"}, {"from": "OnboardingAuth", "to": "CloudDM", "label": "getUserInitialDetails"}, {"from": "Authentication", "to": "Keychain", "label": "token R/W"}, {"from": "Authentication", "to": "TokenRefresh", "label": "status gate"}, {"from": "TokenRefresh", "to": "Keychain", "label": "refresh tokens"}, {"from": "TokenRefresh", "to": "WebService", "label": "inject headers"}, {"from": "WebService", "to": "TokenRefresh", "label": "401 → refresh"}, {"from": "PairingUI", "to": "DeviceCatalog", "label": "model list"}, {"from": "PairingUI", "to": "Connectivity", "label": "scan/connect"}, {"from": "PairingUI", "to": "ConnectedDevices", "label": "save device"}, {"from": "PairingUI", "to": "UserProfile", "label": "attach device"}, {"from": "PairingUI", "to": "CloudDM", "label": "saveDevice online"}, {"from": "Connectivity", "to": "OHQ", "label": "OHQBleManager"}, {"from": "Connectivity", "to": "SonicSDK", "label": "sonic path"}, {"from": "DataTransfer", "to": "Connectivity", "label": "transfer session"}, {"from": "DataTransfer", "to": "VitalParser", "label": "raw payload"}, {"from": "VitalParser", "to": "VitalDM", "label": "typed DTOs"}, {"from": "VitalDM", "to": "TypeManagers", "label": "route category"}, {"from": "TypeManagers", "to": "RealmModels", "label": "write vitals"}, {"from": "TypeManagers", "to": "DBRepos", "label": "unsynced flags"}, {"from": "ConnectedDevices", "to": "RealmModels", "label": "ConnectedDevice"}, {"from": "UserProfile", "to": "RealmModels", "label": "UserProfile"}, {"from": "DataManager", "to": "RealmProvider", "label": "config/open"}, {"from": "DataManager", "to": "RealmModels", "label": "schema 551"}, {"from": "RealmProvider", "to": "DBRepos", "label": "thread access"}, {"from": "DBRepos", "to": "RealmModels", "label": "queries"}, {"from": "CloudDM", "to": "WebService", "label": "HTTP"}, {"from": "CloudDM", "to": "UserProfile", "label": "profile APIs"}, {"from": "SyncMgr", "to": "DBRepos", "label": "getUnsynced"}, {"from": "SyncMgr", "to": "CloudDM", "label": "push/pull"}, {"from": "SyncMgr", "to": "WebService", "label": "vital ops"}, {"from": "SyncMgr", "to": "TypeManagers", "label": "stamp sync"}, {"from": "Dashboard", "to": "ReadingsUC", "label": "tile data"}, {"from": "Dashboard", "to": "DataTransfer", "label": "manual sync"}, {"from": "Dashboard", "to": "Packages", "label": "design system"}, {"from": "Dashboard", "to": "VitalDM", "label": "panels"}, {"from": "HistoryUI", "to": "ReadingsUC", "label": "date ranges"}, {"from": "HistoryUI", "to": "TypeManagers", "label": "lists/graphs"}, {"from": "HistoryUI", "to": "RealmProvider", "label": "Results queries"}, {"from": "ReadingsUC", "to": "TypeManagers", "label": "fetch"}, {"from": "EKG", "to": "SonicSDK", "label": "ECG frameworks"}, {"from": "EKG", "to": "VitalDM", "label": "store records"}, {"from": "EKG", "to": "HistoryUI", "label": "waveform UI"}, {"from": "HealthKit", "to": "VitalDM", "label": "import/export"}, {"from": "HealthKit", "to": "RealmModels", "label": "linked data"}, {"from": "Reminders", "to": "UserProfile", "label": "schedule user"}, {"from": "Reminders", "to": "RealmModels", "label": "reminder objs"}, {"from": "Consent", "to": "Splash", "label": "gate continue"}], "flows": [{"id": "cold-launch", "name": "1. Cold launch → Dashboard", "tier": "T0", "color": "#58a6ff", "summary": "AppDelegate boots DI & Realm, Splash checks auth + region/consent, Navigation lands on Dashboard which reads vitals from Realm.", "steps": ["AppDelegate", "CoreAppContainer", "DataManager", "Splash", "Authentication", "Keychain", "RegionConfig", "Consent", "Navigation", "Dashboard", "ReadingsUC", "TypeManagers", "RealmProvider", "RealmModels"]}, {"id": "login", "name": "2. Login / session create", "tier": "T0", "color": "#3fb950", "summary": "Sign-in UI → OnboardingAuthenticationManager → WebService login/OIDC → tokens to Keychain → CloudDataManager initial profile → UserProfileManager → Dashboard.", "steps": ["SignInUI", "OnboardingAuth", "WebService", "TokenRefresh", "Authentication", "Keychain", "CloudDM", "UserProfile", "RealmModels", "Navigation", "Dashboard"]}, {"id": "session-restore", "name": "3. Session restore", "tier": "T0", "color": "#7ee787", "summary": "Splash reads Authentication.checkLoggedIn() from Keychain; if valid, skips login and opens Dashboard with existing profile/Realm.", "steps": ["Splash", "Authentication", "Keychain", "UserProfile", "DataManager", "Navigation", "Dashboard"]}, {"id": "pair-device", "name": "4. Pair Omron device", "tier": "T0", "color": "#d2a8ff", "summary": "Pairing coordinator → device catalog → ConnectivityManager.scan/connect via OHQ → persist ConnectedDevice (local + cloud) → Dashboard shows device.", "steps": ["Navigation", "PairingUI", "DeviceCatalog", "Connectivity", "OHQ", "ConnectedDevices", "UserProfile", "CloudDM", "WebService", "RealmModels", "Dashboard"]}, {"id": "ble-ingest", "name": "5. BLE transfer → Realm", "tier": "T0", "color": "#e3b341", "summary": "Highest silent data-loss risk. Manual/auto transfer → Connectivity/OHQ → VitalDataParser → VitalDataManager → type managers write Realm with syncTimestamp=0.", "steps": ["Dashboard", "DataTransfer", "Connectivity", "OHQ", "VitalParser", "VitalDM", "TypeManagers", "RealmModels", "DBRepos"]}, {"id": "cloud-upload", "name": "6. Cloud sync upload", "tier": "T0", "color": "#f0883e", "summary": "SynchronizationManager pulls unsynced vitals (updatedTimestamp > syncTimestamp) → CloudDataManager/WebService → on 200 stamp syncTimestamp.", "steps": ["SyncMgr", "DBRepos", "RealmModels", "TypeManagers", "CloudDM", "WebService", "TokenRefresh", "Keychain"]}, {"id": "cloud-download", "name": "7. Cloud sync pull", "tier": "T1", "color": "#ffa657", "summary": "Sync downloads remote vitals/profile into Realm and refreshes Dashboard tiles.", "steps": ["SyncMgr", "CloudDM", "WebService", "TypeManagers", "UserProfile", "RealmModels", "Dashboard", "ReadingsUC"]}, {"id": "show-data", "name": "8. Show data (History)", "tier": "T1", "color": "#79c0ff", "summary": "Realm → provider → type managers / Get*Readings use cases → History VCs & charts. Watch CRA-172 reloadRows on live Results.", "steps": ["HistoryUI", "ReadingsUC", "TypeManagers", "RealmProvider", "RealmModels", "VitalDM"]}, {"id": "ekg", "name": "9. EKG record → History", "tier": "T1", "color": "#f85149", "summary": "EKG feature drives AliveCor/ECG SDKs (and Complete via BLE), stores analysis via VitalDataManager, history renders waveforms.", "steps": ["Navigation", "EKG", "SonicSDK", "Connectivity", "OHQ", "VitalDM", "TypeManagers", "RealmModels", "HistoryUI"]}, {"id": "healthkit", "name": "10. HealthKit link", "tier": "T2", "color": "#a5d6ff", "summary": "Health App Manager / Connected Apps import or export vitals through VitalDataManager and Realm.", "steps": ["HealthKit", "VitalDM", "TypeManagers", "RealmModels", "Dashboard"]}], "positions": {"AppDelegate": {"x": 40, "y": 40}, "CoreAppContainer": {"x": 40, "y": 130}, "Splash": {"x": 40, "y": 220}, "Navigation": {"x": 40, "y": 310}, "Analytics": {"x": 40, "y": 430}, "Packages": {"x": 40, "y": 520}, "RegionConfig": {"x": 280, "y": 40}, "FeatureFlags": {"x": 280, "y": 130}, "SignInUI": {"x": 280, "y": 230}, "OnboardingAuth": {"x": 280, "y": 320}, "Authentication": {"x": 280, "y": 410}, "Keychain": {"x": 280, "y": 500}, "TokenRefresh": {"x": 280, "y": 590}, "Consent": {"x": 280, "y": 680}, "PairingUI": {"x": 540, "y": 40}, "DeviceCatalog": {"x": 540, "y": 130}, "Connectivity": {"x": 540, "y": 220}, "ConnectedDevices": {"x": 540, "y": 310}, "DataTransfer": {"x": 540, "y": 400}, "VitalParser": {"x": 540, "y": 490}, "VitalDM": {"x": 540, "y": 580}, "TypeManagers": {"x": 540, "y": 670}, "UserProfile": {"x": 540, "y": 760}, "OHQ": {"x": 760, "y": 160}, "SonicSDK": {"x": 760, "y": 280}, "DataManager": {"x": 980, "y": 40}, "RealmProvider": {"x": 980, "y": 130}, "DBRepos": {"x": 980, "y": 220}, "RealmModels": {"x": 980, "y": 310}, "WebService": {"x": 980, "y": 420}, "CloudDM": {"x": 980, "y": 510}, "SyncMgr": {"x": 980, "y": 600}, "Dashboard": {"x": 1220, "y": 80}, "HistoryUI": {"x": 1220, "y": 200}, "ReadingsUC": {"x": 1220, "y": 320}, "EKG": {"x": 1220, "y": 440}, "HealthKit": {"x": 1220, "y": 560}, "Reminders": {"x": 1220, "y": 680}}, "layers": [{"id": "shell", "label": "App shell"}, {"id": "config", "label": "Config"}, {"id": "auth", "label": "Auth"}, {"id": "ble", "label": "BLE / devices"}, {"id": "domain", "label": "Domain"}, {"id": "external", "label": "Native SDKs"}, {"id": "data", "label": "Persistence"}, {"id": "cloud", "label": "Cloud"}, {"id": "ui", "label": "Product UI"}, {"id": "feature", "label": "Features"}, {"id": "obs", "label": "Observability"}, {"id": "package", "label": "Packages"}], "riskLegend": {"T0": "Catastrophic — data loss / lockout", "T1": "Severe — whole feature or vital type", "T2": "High — crash or wrong UI data"}};
+const POS = Object.fromEntries(Object.entries(DATA.positions).map(([k,v]) => [k, {x:v.x, y:v.y}]));
+const TYPE_COLOR = {
+  app:'#4da3ff', service:'#3ecf8e', feature:'#c792ea', ui:'#7ec8ff',
+  database:'#ff9f43', external:'#ff6b6b', config:'#9ad0ff',
+  domain:'#69db7c', observability:'#ffb347', package:'#ff8e8e'
+};
+
+const svg = document.getElementById('map');
+const viewport = document.getElementById('viewport');
+const edgesG = document.getElementById('edges');
+const nodesG = document.getElementById('nodes');
+const flowPathsG = document.getElementById('flowPaths');
+const bandsG = document.getElementById('bands');
+const tooltip = document.getElementById('tooltip');
+const flowList = document.getElementById('flowList');
+const detailPanel = document.getElementById('detailPanel');
+const overview = document.getElementById('overview');
+const searchEl = document.getElementById('search');
+const typeFilter = document.getElementById('typeFilter');
+const riskFilter = document.getElementById('riskFilter');
+
+let transform = { x: 30, y: 20, k: 0.85 };
+let selected = null;
+let selectedFlow = null;
+let nodeEls = {};
+let edgeEls = [];
+let flowEdgeEls = [];
+
+function applyTransform() {
+  viewport.setAttribute('transform', `translate(${transform.x},${transform.y}) scale(${transform.k})`);
+}
+
+function nodeSize(id) {
+  const n = DATA.nodes[id];
+  const label = n.label || id;
+  const w = Math.max(148, Math.min(188, 14 + label.length * 6.8));
+  return { w, h: 46 };
+}
+
+function edgeAnchors(a, b) {
+  const sa = nodeSize(a), sb = nodeSize(b);
+  const pa = POS[a], pb = POS[b];
+  const acx = pa.x + sa.w/2, acy = pa.y + sa.h/2;
+  const bcx = pb.x + sb.w/2, bcy = pb.y + sb.h/2;
+  const dx = bcx - acx, dy = bcy - acy;
+  // exit from center of closer edge
+  function port(p, s, towardX, towardY) {
+    const cx = p.x + s.w/2, cy = p.y + s.h/2;
+    const tdx = towardX - cx, tdy = towardY - cy;
+    if (Math.abs(tdx) > Math.abs(tdy)) {
+      return tdx > 0 ? {x: p.x + s.w, y: cy} : {x: p.x, y: cy};
+    }
+    return tdy > 0 ? {x: cx, y: p.y + s.h} : {x: cx, y: p.y};
+  }
+  const p1 = port(pa, sa, bcx, bcy);
+  const p2 = port(pb, sb, acx, acy);
+  return {p1, p2};
+}
+
+function edgePath(a, b) {
+  const {p1, p2} = edgeAnchors(a, b);
+  const dx = Math.max(30, Math.abs(p2.x - p1.x) * 0.4);
+  const c1x = p1.x + (p2.x >= p1.x ? dx : -dx);
+  const c2x = p2.x + (p2.x >= p1.x ? -dx : dx);
+  return `M ${p1.x} ${p1.y} C ${c1x} ${p1.y}, ${c2x} ${p2.y}, ${p2.x} ${p2.y}`;
+}
+
+function midLabel(a, b) {
+  const {p1, p2} = edgeAnchors(a, b);
+  return { x: (p1.x + p2.x)/2, y: (p1.y + p2.y)/2 - 5 };
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function upstream(id) { return DATA.edges.filter(e => e.to === id).map(e => e.from); }
+function downstream(id) { return DATA.edges.filter(e => e.from === id).map(e => e.to); }
+function flowsFor(id) { return DATA.flows.filter(f => f.steps.includes(id)); }
+
+function initHeader() {
+  document.getElementById('metaLine').textContent =
+    `${DATA.product} · ${DATA.generatedAt} · ${DATA.commitShort} · schema v${DATA.schemaVersion} · ${DATA.stats.nodes} components · ${DATA.stats.edges} edges · ${DATA.stats.flows} flows`;
+  document.getElementById('stats').innerHTML = `
+    <span class="chip"><strong>${DATA.stats.swiftApp}</strong> app Swift files</span>
+    <span class="chip"><strong>${DATA.stats.moduleManagers}</strong> module managers</span>
+    <span class="chip"><strong>${DATA.stats.viewAreas}</strong> view areas</span>
+    <span class="chip"><strong>${DATA.stats.features}</strong> feature modules</span>
+    <span class="chip">Realm schema <strong>v${DATA.schemaVersion}</strong></span>
+  `;
+  overview.innerHTML = `
+    <div class="overview-card">
+      <strong>System shape.</strong> UIKit app (Voltron scheme) with FactoryKit DI,
+      feature folders (Presentation/Domain/Data), heavy legacy View/ + Module Managers/,
+      Realm local store, Alamofire cloud, BLE via OmronCommunicationLib (OHQ).
+    </div>
+    <div class="overview-card">
+      <strong>T0 load-bearing seams:</strong> DataManager (Realm migration), Authentication + Keychain,
+      syncTimestamp / getUnsyncedData / VitalDataManager, ConnectivityManager + OHQ, WebService + interceptor.
+    </div>
+  `;
+}
+
+function renderBands() {
+  bandsG.innerHTML = '';
+  const cols = [
+    {x: 20, label: 'Shell / obs'},
+    {x: 260, label: 'Config · Auth'},
+    {x: 520, label: 'BLE · Domain'},
+    {x: 740, label: 'SDKs'},
+    {x: 960, label: 'Data · Cloud'},
+    {x: 1200, label: 'UI · Features'},
+  ];
+  cols.forEach(c => {
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('class', 'layer-band');
+    t.setAttribute('x', c.x);
+    t.setAttribute('y', 18);
+    t.textContent = c.label;
+    bandsG.appendChild(t);
+  });
+}
+
+function matchesFilter(id) {
+  const n = DATA.nodes[id];
+  const q = searchEl.value.trim().toLowerCase();
+  const t = typeFilter.value;
+  const r = riskFilter.value;
+  if (t && n.type !== t) return false;
+  if (r && n.risk !== r) return false;
+  if (!q) return true;
+  const hay = [n.label, id, n.desc, n.file, n.layer, n.type, n.risk].join(' ').toLowerCase();
+  return hay.includes(q);
+}
+
+function consecutivePairs(steps) {
+  const pairs = [];
+  for (let i = 0; i < steps.length - 1; i++) pairs.push([steps[i], steps[i+1]]);
+  return pairs;
+}
+
+function edgeExists(a, b) {
+  return DATA.edges.some(e => (e.from === a && e.to === b) || (e.from === b && e.to === a));
+}
+
+function render() {
+  edgesG.innerHTML = '';
+  nodesG.innerHTML = '';
+  flowPathsG.innerHTML = '';
+  edgeEls = [];
+  flowEdgeEls = [];
+  nodeEls = {};
+  renderBands();
+
+  DATA.edges.forEach((e, i) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', edgePath(e.from, e.to));
+    path.setAttribute('class', 'edge');
+    path.setAttribute('marker-end', 'url(#arrow)');
+    edgesG.appendChild(path);
+    const mid = midLabel(e.from, e.to);
+    const lab = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    lab.setAttribute('class', 'edge-label');
+    lab.setAttribute('x', mid.x);
+    lab.setAttribute('y', mid.y);
+    lab.setAttribute('text-anchor', 'middle');
+    lab.textContent = e.label || '';
+    edgesG.appendChild(lab);
+    edgeEls.push({ path, lab, e });
+  });
+
+  Object.keys(DATA.nodes).forEach(id => {
+    const n = DATA.nodes[id];
+    const {w,h} = nodeSize(id);
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.setAttribute('class', 'node');
+    g.dataset.id = id;
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('x', POS[id].x);
+    rect.setAttribute('y', POS[id].y);
+    rect.setAttribute('width', w);
+    rect.setAttribute('height', h);
+    rect.setAttribute('rx', 9);
+    rect.setAttribute('fill', '#151c26');
+    rect.setAttribute('stroke', TYPE_COLOR[n.type] || '#4da3ff');
+    const t1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t1.setAttribute('x', POS[id].x + 10);
+    t1.setAttribute('y', POS[id].y + 19);
+    t1.textContent = n.label;
+    const t2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t2.setAttribute('class', 'sub');
+    t2.setAttribute('x', POS[id].x + 10);
+    t2.setAttribute('y', POS[id].y + 34);
+    t2.textContent = `${n.type} · ${n.risk}`;
+    // risk accent bar
+    const bar = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    bar.setAttribute('x', POS[id].x);
+    bar.setAttribute('y', POS[id].y);
+    bar.setAttribute('width', 4);
+    bar.setAttribute('height', h);
+    bar.setAttribute('rx', 2);
+    bar.setAttribute('fill', n.risk === 'T0' ? '#ff5c5c' : n.risk === 'T1' ? '#ff9f43' : '#f6d365');
+    bar.setAttribute('opacity', '0.9');
+    g.appendChild(rect); g.appendChild(bar); g.appendChild(t1); g.appendChild(t2);
+
+    g.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      selected = id;
+      selectedFlow = null;
+      document.querySelectorAll('.flow-btn').forEach(b => b.classList.remove('active'));
+      highlight();
+      showNodeDetail(id);
+    });
+
+    g.addEventListener('pointerenter', (ev) => showTooltip(id, ev));
+    g.addEventListener('pointermove', (ev) => moveTooltip(ev));
+    g.addEventListener('pointerleave', hideTooltip);
+
+    // drag nodes
+    let dragging = false, ox=0, oy=0;
+    g.addEventListener('pointerdown', (ev) => {
+      if (ev.button !== 0) return;
+      dragging = true;
+      ox = (ev.clientX - transform.x) / transform.k - POS[id].x;
+      oy = (ev.clientY - transform.y) / transform.k - POS[id].y;
+      g.setPointerCapture(ev.pointerId);
+      ev.stopPropagation();
+    });
+    g.addEventListener('pointermove', (ev) => {
+      if (!dragging) return;
+      POS[id].x = (ev.clientX - transform.x) / transform.k - ox;
+      POS[id].y = (ev.clientY - transform.y) / transform.k - oy;
+      rect.setAttribute('x', POS[id].x); rect.setAttribute('y', POS[id].y);
+      bar.setAttribute('x', POS[id].x); bar.setAttribute('y', POS[id].y);
+      t1.setAttribute('x', POS[id].x + 10); t1.setAttribute('y', POS[id].y + 19);
+      t2.setAttribute('x', POS[id].x + 10); t2.setAttribute('y', POS[id].y + 34);
+      edgeEls.forEach(({path, lab, e}) => {
+        if (e.from === id || e.to === id) {
+          path.setAttribute('d', edgePath(e.from, e.to));
+          const mid = midLabel(e.from, e.to);
+          lab.setAttribute('x', mid.x); lab.setAttribute('y', mid.y);
+        }
+      });
+      redrawFlowPath();
+    });
+    g.addEventListener('pointerup', () => { dragging = false; });
+
+    nodesG.appendChild(g);
+    nodeEls[id] = g;
+  });
+
+  applyTransform();
+  highlight();
+}
+
+function redrawFlowPath() {
+  flowPathsG.innerHTML = '';
+  flowEdgeEls = [];
+  if (!selectedFlow) return;
+  const flow = DATA.flows.find(f => f.id === selectedFlow);
+  if (!flow) return;
+  consecutivePairs(flow.steps).forEach(([a, b]) => {
+    if (!POS[a] || !POS[b]) return;
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', edgePath(a, b));
+    path.setAttribute('class', 'edge flow');
+    path.setAttribute('marker-end', 'url(#arrow-flow)');
+    path.style.pointerEvents = 'none';
+    flowPathsG.appendChild(path);
+    flowEdgeEls.push(path);
+  });
+}
+
+function highlight() {
+  const flow = selectedFlow ? DATA.flows.find(f => f.id === selectedFlow) : null;
+  const flowSteps = flow ? new Set(flow.steps) : null;
+  const flowPairSet = new Set();
+  if (flow) {
+    consecutivePairs(flow.steps).forEach(([a,b]) => {
+      flowPairSet.add(a + '→' + b);
+      flowPairSet.add(b + '→' + a);
+    });
+  }
+
+  const related = new Set();
+  if (selected) {
+    related.add(selected);
+    upstream(selected).forEach(x => related.add(x));
+    downstream(selected).forEach(x => related.add(x));
+  }
+
+  Object.keys(nodeEls).forEach(id => {
+    const el = nodeEls[id];
+    const ok = matchesFilter(id);
+    const inFlow = flowSteps && flowSteps.has(id);
+    const inRelated = selected && related.has(id);
+    const dim = !ok || ((selected || flowSteps) && !inRelated && !inFlow && selected !== id);
+    el.classList.toggle('dim', !!dim);
+    el.classList.toggle('hi', selected === id);
+    el.classList.toggle('flow-hi', !!(inFlow && selectedFlow));
+  });
+
+  edgeEls.forEach(({path, lab, e}) => {
+    path.classList.remove('hi', 'flow', 'dim');
+    const ok = matchesFilter(e.from) && matchesFilter(e.to);
+    const onFlowPair = flowPairSet.has(e.from + '→' + e.to);
+    if (onFlowPair) {
+      // structural edge also on flow — keep dim under animated overlay; slight accent
+      path.classList.add('hi');
+      path.setAttribute('marker-end', 'url(#arrow-hi)');
+      path.style.opacity = '0.35';
+      return;
+    }
+    path.style.opacity = '';
+    if (selected && (e.from === selected || e.to === selected)) {
+      path.classList.add('hi');
+      path.setAttribute('marker-end', 'url(#arrow-hi)');
+      return;
+    }
+    if (!ok || selected || flowSteps) {
+      path.classList.add('dim');
+      path.setAttribute('marker-end', 'url(#arrow)');
+    } else {
+      path.setAttribute('marker-end', 'url(#arrow)');
+    }
+  });
+
+  redrawFlowPath();
+}
+
+function showTooltip(id, ev) {
+  const n = DATA.nodes[id];
+  tooltip.innerHTML = `
+    <div class="tt-title">${escapeHtml(n.label)}</div>
+    <div class="tt-type">${escapeHtml(n.type)} · ${escapeHtml(n.risk)} · ${escapeHtml(DATA.riskLegend[n.risk] || '')}</div>
+    <div class="tt-desc">${escapeHtml(n.desc)}</div>
+    <div class="tt-file">${escapeHtml(n.file)}</div>
+  `;
+  tooltip.classList.add('show');
+  moveTooltip(ev);
+}
+function moveTooltip(ev) {
+  const pad = 14;
+  let x = ev.clientX + pad, y = ev.clientY + pad;
+  const r = tooltip.getBoundingClientRect();
+  if (x + r.width > window.innerWidth - 8) x = ev.clientX - r.width - pad;
+  if (y + r.height > window.innerHeight - 8) y = ev.clientY - r.height - pad;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
+function hideTooltip() { tooltip.classList.remove('show'); }
+
+function showNodeDetail(id) {
+  const n = DATA.nodes[id];
+  const up = upstream(id);
+  const down = downstream(id);
+  const fl = flowsFor(id);
+  detailPanel.innerHTML = `
+    <h3>Selected component</h3>
+    <div style="margin-bottom:6px">
+      <strong style="font-size:14px">${escapeHtml(n.label)}</strong>
+    </div>
+    <span class="tag">${escapeHtml(n.type)}</span>
+    <span class="tag risk-${escapeHtml(n.risk)}">${escapeHtml(n.risk)} · ${escapeHtml(DATA.riskLegend[n.risk]||'')}</span>
+    <span class="tag">${n.files||0} files (approx)</span>
+    <p style="margin:10px 0">${escapeHtml(n.desc)}</p>
+    <h3>Source</h3>
+    <p><code>${escapeHtml(n.file)}</code></p>
+    <h3>Upstream</h3>
+    ${up.length ? `<ul>${up.map(u => `<li>${escapeHtml(DATA.nodes[u].label)}</li>`).join('')}</ul>` : '<p class="empty">None in map</p>'}
+    <h3>Downstream</h3>
+    ${down.length ? `<ul>${down.map(u => `<li>${escapeHtml(DATA.nodes[u].label)}</li>`).join('')}</ul>` : '<p class="empty">None in map</p>'}
+    <h3>Appears in flows</h3>
+    ${fl.length ? `<ul>${fl.map(f => `<li>${escapeHtml(f.name)}</li>`).join('')}</ul>` : '<p class="empty">Not on a mapped flow</p>'}
+    <p style="margin-top:12px"><button type="button" class="clear-link" id="clearSel">Clear selection</button></p>
+  `;
+  document.getElementById('clearSel')?.addEventListener('click', clearSelection);
+}
+
+function showFlowDetail(flow) {
+  detailPanel.innerHTML = `
+    <h3>Active flow</h3>
+    <div style="margin-bottom:6px"><strong style="font-size:14px">${escapeHtml(flow.name)}</strong></div>
+    <span class="tag risk-${escapeHtml(flow.tier)}">${escapeHtml(flow.tier)}</span>
+    <span class="tag">${flow.steps.length} steps</span>
+    <p style="margin:10px 0">${escapeHtml(flow.summary)}</p>
+    <h3>Complete path</h3>
+    <div>
+      ${flow.steps.map((s,i) => `
+        <div class="path-step active-step">
+          <span class="n">${i+1}</span>
+          <div>
+            <div>${escapeHtml(DATA.nodes[s].label)}</div>
+            <code>${escapeHtml(DATA.nodes[s].file)}</code>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <p style="margin-top:12px"><button type="button" class="clear-link" id="clearSel">Clear flow highlight</button></p>
+  `;
+  document.getElementById('clearSel')?.addEventListener('click', clearSelection);
+}
+
+function selectFlow(id) {
+  selectedFlow = id;
+  selected = null;
+  const flow = DATA.flows.find(f => f.id === id);
+  highlight();
+  showFlowDetail(flow);
+  document.querySelectorAll('.flow-btn').forEach(b => b.classList.toggle('active', b.dataset.id === id));
+  // fit flow nodes
+  fitToIds(flow.steps);
+}
+
+function clearSelection() {
+  selected = null;
+  selectedFlow = null;
+  document.querySelectorAll('.flow-btn').forEach(b => b.classList.remove('active'));
+  detailPanel.innerHTML = '';
+  highlight();
+}
+
+function renderFlowButtons() {
+  flowList.innerHTML = '';
+  DATA.flows.forEach(f => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'flow-btn';
+    b.dataset.id = f.id;
+    b.innerHTML = `
+      <div class="title"><span class="dot" style="background:${escapeHtml(f.color)}"></span>${escapeHtml(f.name)}</div>
+      <div class="badge">${escapeHtml(f.summary)}</div>
+    `;
+    b.addEventListener('click', () => selectFlow(f.id));
+    flowList.appendChild(b);
+  });
+}
+
+function fitToIds(ids) {
+  if (!ids.length) return;
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+  ids.forEach(id => {
+    if (!POS[id]) return;
+    const {w,h} = nodeSize(id);
+    minX = Math.min(minX, POS[id].x);
+    minY = Math.min(minY, POS[id].y);
+    maxX = Math.max(maxX, POS[id].x + w);
+    maxY = Math.max(maxY, POS[id].y + h);
+  });
+  const wrap = document.getElementById('canvas-wrap').getBoundingClientRect();
+  const pad = 60;
+  const bw = maxX - minX + pad*2, bh = maxY - minY + pad*2;
+  const k = Math.min(1.2, Math.max(0.4, Math.min(wrap.width/bw, wrap.height/bh)));
+  transform.k = k;
+  transform.x = (wrap.width - (minX + maxX) * k) / 2;
+  transform.y = (wrap.height - (minY + maxY) * k) / 2 + 10;
+  applyTransform();
+}
+
+function fitAll() {
+  fitToIds(Object.keys(POS));
+}
+
+// pan
+let panning = false, px=0, py=0;
+svg.addEventListener('pointerdown', (ev) => {
+  if (ev.target.closest('.node')) return;
+  panning = true;
+  px = ev.clientX - transform.x;
+  py = ev.clientY - transform.y;
+  svg.classList.add('dragging');
+  svg.setPointerCapture(ev.pointerId);
+});
+svg.addEventListener('pointermove', (ev) => {
+  if (!panning) return;
+  transform.x = ev.clientX - px;
+  transform.y = ev.clientY - py;
+  applyTransform();
+});
+svg.addEventListener('pointerup', () => { panning = false; svg.classList.remove('dragging'); });
+svg.addEventListener('wheel', (ev) => {
+  ev.preventDefault();
+  const delta = ev.deltaY > 0 ? 0.9 : 1.1;
+  const rect = svg.getBoundingClientRect();
+  const mx = ev.clientX - rect.left, my = ev.clientY - rect.top;
+  const k2 = Math.min(2.8, Math.max(0.3, transform.k * delta));
+  transform.x = mx - (mx - transform.x) * (k2 / transform.k);
+  transform.y = my - (my - transform.y) * (k2 / transform.k);
+  transform.k = k2;
+  applyTransform();
+}, { passive: false });
+
+document.getElementById('zoomIn').onclick = () => { transform.k = Math.min(2.8, transform.k * 1.15); applyTransform(); };
+document.getElementById('zoomOut').onclick = () => { transform.k = Math.max(0.3, transform.k / 1.15); applyTransform(); };
+document.getElementById('fitView').onclick = fitAll;
+document.getElementById('resetView').onclick = () => {
+  clearSelection();
+  searchEl.value = '';
+  typeFilter.value = '';
+  riskFilter.value = '';
+  fitAll();
+  highlight();
+};
+searchEl.addEventListener('input', highlight);
+typeFilter.addEventListener('change', highlight);
+riskFilter.addEventListener('change', highlight);
+
+initHeader();
+renderFlowButtons();
+render();
+requestAnimationFrame(fitAll);
+</script>
+</body>
+</html>

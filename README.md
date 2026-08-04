@@ -18,6 +18,7 @@ Static HTML only. No Mac, no tunnel, no build.
 | [`/profile-wc/`](https://royatluscii.github.io/prototypes/profile-wc/) | **Profile world-class** — pixel craft on every screen; S0–S9 |
 | [`/profile/`](https://royatluscii.github.io/prototypes/profile/) | **Profile 10×** — Devices · Cloud · You · Settings (IA baseline) |
 | [`/measure-schedule/`](https://royatluscii.github.io/prototypes/measure-schedule/) | **Measure schedule** — reminders on device (also in Devices) |
+| [`/ios-architecture/`](https://royatluscii.github.io/prototypes/ios-architecture/) | **iOS architecture explorer** — interactive components + critical flows |
 
 ## Local
 
