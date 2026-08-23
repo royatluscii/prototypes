@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OMRON Connect — Quality</title>
+  <title>OMRON Connect — Quality · 90 days</title>
   <style>
     :root {
       --paper: #f4f1ea;
@@ -12,6 +12,8 @@
       --line: #d5d0c4;
       --card: #fffdf8;
       --blue: #0067a0;
+      --bad: #9a3412;
+      --bad-bg: #fff1e8;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; }
@@ -28,74 +30,59 @@
     .kicker {
       display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
       font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 20px;
+      color: var(--muted); margin-bottom: 16px;
     }
     .kicker a { color: var(--muted); text-decoration: none; }
-    .kicker a:hover { color: var(--blue); }
+    .window {
+      display: inline-block; background: #e8eef3; color: var(--blue);
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 5px 10px; margin-bottom: 14px;
+    }
     h1 {
-      margin: 0 0 8px;
-      font-size: clamp(28px, 4.6vw, 40px);
-      font-weight: 600; letter-spacing: -0.03em; line-height: 1.08;
+      margin: 0 0 8px; font-size: clamp(26px, 4.2vw, 36px);
+      font-weight: 600; letter-spacing: -0.03em; line-height: 1.1;
     }
-    .verdict {
-      margin: 0 0 28px; font-size: 18px; line-height: 1.4; color: var(--muted); max-width: 38em;
-    }
+    .verdict { margin: 0 0 22px; font-size: 17px; line-height: 1.4; color: var(--muted); max-width: 40em; }
 
-    .hero {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;
-    }
-    .hero .card {
-      background: var(--card); border: 1px solid var(--line); padding: 20px 20px 16px;
-    }
-    .hero .k {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--blue);
-    }
-    .hero .v {
-      margin: 6px 0 4px; font-size: clamp(40px, 6vw, 52px); font-weight: 600; letter-spacing: -0.04em; line-height: 1;
-    }
-    .hero .s { font-size: 13px; color: var(--muted); line-height: 1.35; }
-    .prior {
-      background: var(--card); border: 1px solid var(--line); padding: 12px 18px; margin-bottom: 16px;
-      font-size: 13px; color: var(--muted); line-height: 1.4;
-    }
-    .prior strong { color: var(--ink); }
-
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+    .hero { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     .card { background: var(--card); border: 1px solid var(--line); padding: 16px 18px; }
-    .card .k {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--blue);
+    .k { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--blue); }
+    .v { margin: 6px 0 4px; font-size: clamp(32px, 5vw, 44px); font-weight: 600; letter-spacing: -0.04em; line-height: 1; }
+    .s { font-size: 13px; color: var(--muted); line-height: 1.35; }
+    .meta {
+      background: var(--card); border: 1px solid var(--line); padding: 12px 16px; margin-bottom: 16px;
+      font-size: 13px; color: var(--muted); line-height: 1.45;
     }
-    .card .v { margin: 6px 0 4px; font-size: 36px; font-weight: 600; letter-spacing: -0.04em; }
-    .card .s { font-size: 13px; color: var(--muted); line-height: 1.35; }
+    .meta strong { color: var(--ink); }
+
+    .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .hole { background: var(--bad-bg); border-color: #e8c4b0; }
+    .hole .k { color: var(--bad); }
+    .hole .v { color: var(--bad); font-size: clamp(22px, 3vw, 28px); }
 
     .trend {
       background: var(--card); border: 1px solid var(--line); padding: 16px 18px 14px; margin-bottom: 16px;
     }
-    .trend .k {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--blue); margin-bottom: 12px;
-    }
     .row { display: grid; grid-template-columns: 88px 1fr; gap: 12px; align-items: end; margin-bottom: 12px; }
-    .row:last-child { margin-bottom: 0; }
     .who { font-size: 13px; font-weight: 650; padding-bottom: 14px; }
-    .bars { display: flex; align-items: flex-end; gap: 6px; height: 56px; }
-    .bar { flex: 1; background: var(--blue); opacity: 0.32; border-radius: 2px 2px 0 0; position: relative; }
+    .bars { display: flex; align-items: flex-end; gap: 8px; height: 64px; }
+    .bar { flex: 1; background: var(--blue); opacity: 0.35; border-radius: 2px 2px 0 0; position: relative; }
     .bar.last { opacity: 1; }
     .bar i {
       position: absolute; left: 0; right: 0; top: -14px; text-align: center;
       font-style: normal; font-size: 10px; font-weight: 700; color: var(--ink);
     }
-    .months { display: flex; gap: 6px; margin: 4px 0 0 100px; }
+    .months { display: flex; gap: 8px; margin: 4px 0 0 100px; }
     .months span { flex: 1; text-align: center; font-size: 10px; color: var(--muted); font-weight: 600; }
 
-    .units { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0 0 28px; }
+    .units { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0 0 24px; }
     .units strong { color: var(--ink); }
-
     footer { font-size: 11px; line-height: 1.5; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
     footer a { color: var(--blue); }
 
-    @media (max-width: 640px) {
+    @media (max-width: 700px) {
       .sheet { padding: 24px 16px 40px; }
-      .hero, .grid { grid-template-columns: 1fr; }
+      .hero, .grid3 { grid-template-columns: 1fr; }
       .months { margin-left: 0; }
       .row { grid-template-columns: 1fr; }
       .who { padding-bottom: 0; }
@@ -111,74 +98,82 @@
 <body>
   <div class="sheet">
     <div class="kicker sans">
-      <span>OMRON Connect · Quality · 23 Aug 2026 · FY26</span>
+      <span>OMRON Connect · Quality</span>
       <a href="../">All pages</a>
     </div>
+    <div class="window sans">One window · 25 May–23 Aug 2026 · 90 days</div>
 
-    <h1>Last 90 days, 98.23% of iOS users and 98.95% of Android users did not crash.</h1>
-    <p class="verdict">Store scores mixed: Android up this fiscal year, iOS slightly down. Output 2.9×. Same 90-day crash-free window last year is not on this page.</p>
+    <h1>98.23% of iOS users and 98.95% of Android users did not crash. New store scores are 3.60 and 3.91. First reading after pair is unknown.</h1>
+    <p class="verdict">Same 90 days last year: crash-free not supplied. So we cannot say quality held. Output in this window was 2.8× last year — that is production, not quality.</p>
 
     <div class="hero">
       <div class="card">
         <div class="k sans">Crash-free users · iOS</div>
         <div class="v">98.23%</div>
-        <div class="s">Last 90 days · production. ~1.77% of users hit a crash.</div>
+        <div class="s">1.77% crashed · about 1 in 56 users. Users metric, not sessions.</div>
       </div>
       <div class="card">
         <div class="k sans">Crash-free users · Android</div>
         <div class="v">98.95%</div>
-        <div class="s">Last 90 days · production. ~1.05% of users hit a crash.</div>
+        <div class="s">1.05% crashed · about 1 in 95 users. Users metric, not sessions.</div>
       </div>
     </div>
-    <p class="prior sans"><strong>Same stretch FY25:</strong> — &nbsp; Not supplied. Without it we cannot say crash-free got better while we shipped 2.9×.</p>
+    <p class="meta sans">
+      <strong>Same 90 days 2025:</strong> — not supplied.
+      <strong>Production versions only:</strong> not confirmed.
+      <strong>Headcount who crashed:</strong> — (rate only; no user denominator published).
+      The 99.5% figure elsewhere is crash-free <em>sessions</em>. Different metric. Not this row.
+    </p>
 
-    <div class="grid">
+    <div class="grid3">
       <div class="card">
-        <div class="k sans">Customer score · iOS</div>
-        <div class="v">4.17</div>
-        <div class="s">App Store lifetime average · 23 Aug · 4,315 ratings. 4.20 on 30 Apr.</div>
+        <div class="k sans">New ratings · iOS</div>
+        <div class="v">3.60</div>
+        <div class="s">194 ratings in this 90 days. Weighted from monthly diffs.</div>
       </div>
       <div class="card">
-        <div class="k sans">Customer score · Android</div>
-        <div class="v">4.19</div>
-        <div class="s">Play Store lifetime average · 23 Aug · 115,176 ratings. 4.01 on 30 Apr.</div>
+        <div class="k sans">New ratings · Android</div>
+        <div class="v">3.91</div>
+        <div class="s">39,070 ratings in this 90 days. Weighted from monthly diffs.</div>
+      </div>
+      <div class="card hole">
+        <div class="k sans">Pair → reading in 24h</div>
+        <div class="v">We do not know</div>
+        <div class="s">Share of new pairs that produce a first correct reading. Not instrumented here.</div>
       </div>
     </div>
 
     <div class="trend sans">
-      <div class="k">One series · public store lifetime average · FY26</div>
+      <div class="k" style="margin-bottom:12px">New ratings in the window · monthly · same 1–5 scale both platforms</div>
       <div class="row">
         <div class="who">iOS</div>
         <div class="bars" aria-hidden="true">
-          <div class="bar" style="height:100%"><i>4.20</i></div>
-          <div class="bar" style="height:99%"><i>4.19</i></div>
-          <div class="bar" style="height:98%"><i>4.18</i></div>
-          <div class="bar" style="height:98%"><i>4.18</i></div>
-          <div class="bar last" style="height:97%"><i>4.17</i></div>
+          <div class="bar" style="height:82%"><i>3.55</i></div>
+          <div class="bar" style="height:94%"><i>4.09</i></div>
+          <div class="bar last" style="height:77%"><i>3.35</i></div>
         </div>
       </div>
       <div class="row">
         <div class="who">Android</div>
         <div class="bars" aria-hidden="true">
-          <div class="bar" style="height:84%"><i>4.01</i></div>
-          <div class="bar" style="height:86%"><i>4.03</i></div>
-          <div class="bar" style="height:83%"><i>4.00</i></div>
-          <div class="bar" style="height:95%"><i>4.12</i></div>
-          <div class="bar last" style="height:100%"><i>4.19</i></div>
+          <div class="bar" style="height:83%"><i>3.60</i></div>
+          <div class="bar" style="height:91%"><i>3.95</i></div>
+          <div class="bar last" style="height:100%"><i>4.35</i></div>
         </div>
       </div>
-      <div class="months"><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>23 Aug</span></div>
+      <div class="months"><span>~Jun</span><span>~Jul</span><span>~Aug</span></div>
     </div>
 
     <p class="units sans">
-      <strong>Output</strong> (not quality): 2,274 iOS+Android merges 1 Apr–23 Aug FY26 vs 796 the same dates FY25 · <strong>2.9×</strong>.
-      Full years: FY24 1,681 · FY25 2,972 · FY26 to date 2,274.
+      <strong>Output</strong> (same 90 days, not quality): 1,401 merges vs 497 in 25 May–23 Aug 2025 · <strong>2.8×</strong>
+      (iOS 753 vs 246 · Android 648 vs 251).
     </p>
 
     <footer class="sans">
-      FY = 1 April–31 March.
-      Crash-free users: Crashlytics last 90 days as of 23 Aug 2026. Users metric, not sessions. FY25 same window not provided.
-      Scores: AppFollow public store lifetime averages, collection OMRON Connect, iOS 1166317885 and Android com.omronhealthcare.omronconnect. Same method both platforms.
+      Window is 25 May–23 Aug 2026 everywhere on this page.
+      Crash-free users: Crashlytics last 90 days as given 23 Aug 2026.
+      New ratings: AppFollow public store <em>diff</em> (ratings added in period), collection OMRON Connect, iOS 1166317885 and Android com.omronhealthcare.omronconnect. Last-year diffs incomplete (Android empty; iOS first month looks like a backfill) — omitted.
+      Merges: GitHub Omron-Connect-iOS / Android, merged PRs in the same dates.
       · <a href="https://github.com/royatluscii/prototypes/blob/main/connect-factory/index.html">Source</a>
     </footer>
   </div>
