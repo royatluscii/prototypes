@@ -3,247 +3,348 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>OMRON Connect — The factory</title>
+  <title>OMRON Connect — Quality update</title>
   <style>
     :root {
-      --bg: #0b1220;
-      --card: rgba(30, 41, 59, 0.85);
-      --ink: #f1f5f9;
-      --muted: #94a3b8;
-      --line: rgba(148, 163, 184, 0.22);
-      --blue: #38bdf8;
-      --blue-dim: rgba(56, 189, 248, 0.12);
-      --green: #34d399;
-      --amber: #fbbf24;
+      --paper: #f3f0e8;
+      --ink: #14171c;
+      --muted: #5e6772;
+      --line: #d4cfc3;
+      --card: #fffcf6;
+      --blue: #0067a0;
+      --blue-soft: #e6f2f8;
+      --gap: #9a3412;
+      --gap-bg: #fff4ec;
+      --gap-line: #f0c7b0;
     }
     * { box-sizing: border-box; }
+    html, body { margin: 0; }
     body {
-      margin: 0;
       color: var(--ink);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background:
-        radial-gradient(1000px 500px at 10% -10%, #1e3a5f 0%, transparent 50%),
-        radial-gradient(800px 400px at 100% 0%, #0c4a6e 0%, transparent 45%),
-        var(--bg);
+        linear-gradient(180deg, #e8eef3 0%, var(--paper) 180px);
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
       -webkit-font-smoothing: antialiased;
     }
-    .wrap {
-      max-width: 820px;
-      margin: 0 auto;
-      padding: 36px 20px 48px;
+    .sans {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    a { color: var(--blue); }
-    .eyebrow {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
+    .sheet {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 36px 28px 48px;
+    }
+    .kicker {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px 16px;
+      margin-bottom: 18px;
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--blue);
-      background: var(--blue-dim);
-      border: 1px solid rgba(56, 189, 248, 0.28);
-      border-radius: 999px;
-      padding: 5px 12px;
-      margin-bottom: 12px;
     }
+    .kicker a { color: var(--muted); text-decoration: none; letter-spacing: 0.04em; font-weight: 600; }
+    .kicker a:hover { color: var(--blue); }
     h1 {
-      margin: 0 0 8px;
-      font-size: clamp(26px, 4vw, 34px);
-      font-weight: 750;
-      letter-spacing: -0.03em;
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4.4vw, 40px);
+      font-weight: 600;
+      letter-spacing: -0.025em;
       line-height: 1.12;
     }
     .lede {
-      margin: 0 0 22px;
-      font-size: 16px;
-      line-height: 1.45;
+      margin: 0 0 28px;
+      max-width: 38em;
+      font-size: 18px;
+      line-height: 1.4;
       color: var(--muted);
-      max-width: 640px;
     }
-    .lede strong { color: var(--ink); }
-    .grid {
+    .lede strong { color: var(--ink); font-weight: 600; }
+
+    .metrics {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-bottom: 14px;
+      margin-bottom: 22px;
     }
-    .span2 { grid-column: 1 / -1; }
-    .card {
+    .metric {
       background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 14px 16px;
+      border-radius: 4px;
+      padding: 18px 20px 16px;
     }
-    h2 {
-      margin: 0 0 8px;
-      font-size: 13px;
+    .metric.hole {
+      background: var(--gap-bg);
+      border: 1px dashed var(--gap-line);
+    }
+    .metric .label {
+      font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .metric.hole .label { color: var(--gap); }
+    .metric .value {
+      margin: 6px 0 4px;
+      font-size: clamp(36px, 5vw, 48px);
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .metric.hole .value { color: var(--gap); font-weight: 500; }
+    .metric .note {
+      font-size: 13px;
+      line-height: 1.35;
+      color: var(--muted);
+    }
+
+    .loop-wrap {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 18px 18px 16px;
+      margin-bottom: 22px;
+    }
+    .loop-wrap h2, .block h2, .table-card h2 {
+      margin: 0 0 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--blue);
     }
-    p, li {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.45;
-      color: #cbd5e1;
+    .loop {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+      align-items: stretch;
+      gap: 0;
     }
-    p + p { margin-top: 8px; }
-    ul { margin: 0; padding-left: 18px; }
-    li + li { margin-top: 6px; }
+    .step {
+      text-align: center;
+      padding: 4px 6px;
+    }
+    .dot {
+      width: 28px;
+      height: 28px;
+      margin: 0 auto 8px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      background: var(--blue);
+    }
+    .step.gap .dot {
+      background: transparent;
+      color: var(--gap);
+      border: 1.5px dashed var(--gap);
+    }
+    .step .name {
+      font-size: 14px;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+    }
+    .step .hint {
+      margin-top: 3px;
+      font-size: 12px;
+      line-height: 1.3;
+      color: var(--muted);
+    }
+    .step.gap .name { color: var(--gap); }
+    .arrow {
+      align-self: start;
+      padding-top: 8px;
+      color: #b7b1a6;
+      font-size: 16px;
+    }
+    .loop-foot {
+      margin: 14px 0 0;
+      font-size: 14px;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+
+    .cols {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+    .block, .table-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 18px 20px;
+    }
+    .block p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+    .block p + p { margin-top: 10px; }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
+      font-size: 13px;
     }
     th, td {
       text-align: right;
-      padding: 7px 8px;
+      padding: 6px 0 6px 8px;
       border-bottom: 1px solid var(--line);
     }
-    th:first-child, td:first-child { text-align: left; }
-    th { color: var(--muted); font-weight: 600; font-size: 12px; }
-    td.hi { color: var(--green); font-weight: 700; }
-    .nums {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .stat {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px 14px;
-    }
-    .stat .k {
-      font-size: 11px;
+    th:first-child, td:first-child { text-align: left; padding-left: 0; }
+    th {
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
       color: var(--muted);
     }
-    .stat .v {
-      margin-top: 4px;
-      font-size: 22px;
-      font-weight: 750;
-      letter-spacing: -0.03em;
-      color: var(--green);
-    }
-    .stat .s { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .warn { color: var(--amber); }
-    footer {
-      margin-top: 16px;
+    td.now { font-weight: 700; }
+    caption {
+      caption-side: bottom;
+      text-align: left;
+      padding-top: 10px;
       font-size: 12px;
-      color: #64748b;
+      line-height: 1.4;
+      color: var(--muted);
+    }
+
+    .still {
+      border-left: 3px solid var(--gap);
+      background: var(--gap-bg);
+      padding: 14px 18px;
+      margin-bottom: 20px;
+    }
+    .still p {
+      margin: 0;
+      font-size: 15px;
       line-height: 1.45;
     }
-    @media (max-width: 640px) {
-      .grid, .nums { grid-template-columns: 1fr; }
+
+    footer {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+    footer a { color: var(--blue); }
+
+    @media (max-width: 700px) {
+      .sheet { padding: 24px 16px 36px; }
+      .metrics, .cols, .loop { grid-template-columns: 1fr; }
+      .arrow { display: none; }
+      .step { text-align: left; display: grid; grid-template-columns: 28px 1fr; gap: 0 12px; padding: 8px 0; }
+      .dot { margin: 0; grid-row: 1 / span 2; }
     }
     @media print {
-      @page { size: A4; margin: 10mm; }
-      body { background: white; color: #0f172a; }
-      .eyebrow { color: #0369a1; background: #e0f2fe; border-color: #7dd3fc; }
-      h1, .lede strong, td.hi, .stat .v { color: #0f172a; }
-      .lede, p, li, th, .stat .k, .stat .s, footer { color: #334155; }
-      .card, .stat { background: #f8fafc; border-color: #cbd5e1; }
-      h2 { color: #0369a1; }
-      a { color: #0369a1; }
+      @page { size: A4; margin: 12mm; }
+      body { background: white; }
+      .sheet { padding: 0; max-width: none; }
+      .kicker a { display: none; }
+      .metric, .loop-wrap, .block, .table-card, .still { break-inside: avoid; }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <a class="eyebrow" href="../">← Prototypes</a>
-    <h1>The apps used to be a tax. They are becoming a factory.</h1>
+  <div class="sheet">
+    <div class="kicker sans">
+      <span>OMRON Connect · Quality update · 23 Aug 2026</span>
+      <a href="../">All pages</a>
+    </div>
+
+    <h1>We can change the apps faster. We have not shown they fail less.</h1>
     <p class="lede">
-      A cuff, a scale, an ECG patch — none of that matters if the phone app is slow, crashes, or takes six months to support the next device.
-      <strong>The app is the product people live in.</strong> We did not add process. We changed how software ships.
+      Stakeholders worry about quality — crashes, pairing, whether a new device will actually work.
+      <strong>Change is quicker.</strong> The reliability number that would settle the worry is not on this page, because we will not invent it.
     </p>
 
-    <div class="nums">
-      <div class="stat">
-        <div class="k">Combined merges</div>
-        <div class="v">3,423</div>
-        <div class="s">2026 YTD vs 2,206 all of 2025</div>
+    <div class="metrics sans">
+      <div class="metric">
+        <div class="label">Shipping rate · same stretch last year</div>
+        <div class="value">2.9×</div>
+        <div class="note">Merged iOS + Android PRs, 1 Apr–23 Aug FY26 vs FY25. Dependabot is 2% of that.</div>
       </div>
-      <div class="stat">
-        <div class="k">Rate vs last year</div>
-        <div class="v">~2×</div>
-        <div class="s">~3× vs 2024. Four months left.</div>
-      </div>
-      <div class="stat">
-        <div class="k">Crash-free target</div>
-        <div class="v">99.5%</div>
-        <div class="s">Android production sessions. Goal, not trophy.</div>
+      <div class="metric hole">
+        <div class="label">Crash-free sessions · production</div>
+        <div class="value">—</div>
+        <div class="note">Not published here. FY26 Android target is 99.5%. Until the actual sits next to it, faster is not proof of better.</div>
       </div>
     </div>
 
-    <div class="grid">
-      <div class="card span2">
-        <h2>Proof of throughput</h2>
+    <div class="loop-wrap">
+      <h2 class="sans">The product is this loop</h2>
+      <div class="loop sans">
+        <div class="step">
+          <div class="dot">1</div>
+          <div class="name">Unbox</div>
+          <div class="hint">Device in hand</div>
+        </div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="step">
+          <div class="dot">2</div>
+          <div class="name">Pair</div>
+          <div class="hint">App finds it</div>
+        </div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="step">
+          <div class="dot">3</div>
+          <div class="name">First reading</div>
+          <div class="hint">Correct number, first time</div>
+        </div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="step gap">
+          <div class="dot">4</div>
+          <div class="name">Day 30</div>
+          <div class="hint">Still working · still crash-free</div>
+        </div>
+      </div>
+      <p class="loop-foot">Quality is whether this loop holds. Gates on pull requests help. They are not a substitute for that number.</p>
+    </div>
+
+    <div class="cols">
+      <div class="block">
+        <h2 class="sans">What changed</h2>
+        <p>Every proposed change now hits a gate: tests, coding rules, crash and database checks, a merge queue. iOS has 49 written standards audited on the pull request. Merge to main and a build goes to TestFlight the same day. Device tests run overnight. Android has the same idea — quality gates, release trains, crash reporting scoped to production.</p>
+        <p>People do not remember rules. The gate rejects the bad part. Old code still exists. New work is held to the bar when it is touched.</p>
+      </div>
+      <div class="table-card sans">
+        <h2>Merged changes · fiscal year</h2>
         <table>
           <thead>
-            <tr><th></th><th>2024</th><th>2025</th><th>2026 (8 months)</th></tr>
+            <tr>
+              <th></th>
+              <th>FY24</th>
+              <th>FY25</th>
+              <th>FY26 to date</th>
+            </tr>
           </thead>
           <tbody>
-            <tr><td>iOS merged PRs</td><td>678</td><td>1,055</td><td class="hi">1,695</td></tr>
-            <tr><td>Android merged PRs</td><td>861</td><td>1,151</td><td class="hi">1,728</td></tr>
-            <tr><td>Combined</td><td>1,539</td><td>2,206</td><td class="hi">3,423</td></tr>
+            <tr><td>iOS</td><td>779</td><td>1,396</td><td class="now">1,165</td></tr>
+            <tr><td>Android</td><td>902</td><td>1,576</td><td class="now">1,109</td></tr>
+            <tr><td>Both</td><td>1,681</td><td>2,972</td><td class="now">2,274</td></tr>
           </tbody>
+          <caption>
+            FY = 1 April–31 March. FY26 to date is 1 Apr–23 Aug 2026 (2,274) vs the same dates in FY25 (796). Throughput is evidence of speed, not of crash-free.
+          </caption>
         </table>
-        <p style="margin-top:8px">GitHub merged PRs, Omron-Connect-iOS / Android, through 23 Aug 2026. Dependabot is noise (7 iOS / 42 Android this year). Faster is necessary. It is not sufficient if crash rate does not come with it.</p>
-      </div>
-
-      <div class="card">
-        <h2>1. The machine that makes the machine</h2>
-        <p>Every change runs a factory: tests, coding rules, crash gates, database-safety checks, merge queue. iOS: 49 written standards audited on every PR. Merge to main → TestFlight the same day. Real-device tests overnight. Android: quality gates, release trains, crash reporting scoped to production.</p>
-        <p>Humans do not remember the rules. The factory rejects the bad part.</p>
-      </div>
-
-      <div class="card">
-        <h2>2. Reliability like a flight system</h2>
-        <p>Android production target: 99.5% crash-free sessions. Native crashes captured. ANRs tracked separately. New screens catch errors without killing the whole app.</p>
-        <p>iOS hunts crash clusters in pairing, ECG, settings — and writes post-mortems so the same class of bug does not return. Instrumentation is real. Year-over-year crash-free trend still has to be shown on the dashboard, not claimed here.</p>
-      </div>
-
-      <div class="card">
-        <h2>3. Replace the engine in flight</h2>
-        <p>No two-year rewrite. New iOS work is native, SwiftUI, injected. New Android work is small modules (consent, auth, core, design system). Old screens stay until we touch them. Then they come up to the bar.</p>
-        <p>That is how you modernize a decade of code without stalling the product.</p>
-      </div>
-
-      <div class="card">
-        <h2>4. Devices ship because the app can absorb them</h2>
-        <p>Recent work is pairing, first sync, body-composition scales, ECG guidance, onboarding, Apple Health, localization. Weekly release notes.</p>
-        <p>The bottleneck is moving from “can we dare change this?” to “did the factory pass it?”</p>
-      </div>
-
-      <div class="card span2">
-        <h2>Why this compounds</h2>
-        <ul>
-          <li>New engineers read the same rules the robots enforce.</li>
-          <li>A crash is a ticket with a cause, not a mystery.</li>
-          <li>A new device is a change to a known shape, not a treasure hunt.</li>
-          <li>Apple and Google upgrades (design, accessibility, performance) start landing because we use their platforms instead of fighting them.</li>
-        </ul>
-        <p style="margin-top:8px">Hardware companies usually ignore this until the app is the thing customers hate.</p>
-      </div>
-
-      <div class="card span2">
-        <h2 class="warn">Still true</h2>
-        <p>Not done. Large parts of both apps are still the old world — global state, tribal knowledge. Crash-free is a <strong>goal</strong>, not a trophy. Velocity up without crash rate and review time is shipping faster into a wall.</p>
-        <p>We built the factory. Output is already 2–3×. What remains is feeding it the rest of the old codebase, and treating crash-free with the same seriousness as revenue.</p>
       </div>
     </div>
 
-    <footer>
-      Internal briefing · 23 Aug 2026 · Sources: GitHub merged-PR search (OmronHealthCare-OHI), repo standards &amp; CI, Android crash-reporting runbook (FY26 99.5% goal).
-      Crash-free % trend not included — Firebase dashboard, not invented.
-      <br />
-      <a href="https://github.com/royatluscii/prototypes">github.com/royatluscii/prototypes</a>
-      · <a href="../">All prototypes</a>
+    <div class="still">
+      <p>The worry is fair. Large parts of both apps are still tribal — global state, a few people who know the pairing path. Shipping faster into that is how you ship into a wall. The next honest update puts last month’s crash-free and pair-to-first-reading next to these counts.</p>
+    </div>
+
+    <footer class="sans">
+      Internal · 23 August 2026 · Sources: GitHub merged-PR search, Omron-Connect-iOS / Android (OmronHealthCare-OHI); repo standards and CI; Android crash-reporting runbook (FY26 99.5% goal).
+      Crash-free actual is a Firebase production metric — omitted until it is in hand.
+      · <a href="https://github.com/royatluscii/prototypes/blob/main/connect-factory/index.html">Source</a>
     </footer>
   </div>
 </body>
