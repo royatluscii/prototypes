@@ -12,8 +12,6 @@
       --line: #d5d0c4;
       --card: #fffdf8;
       --blue: #0067a0;
-      --bad: #9a3412;
-      --bad-bg: #fff1e8;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; }
@@ -36,41 +34,34 @@
     .kicker a:hover { color: var(--blue); }
     h1 {
       margin: 0 0 8px;
-      font-size: clamp(30px, 5vw, 42px);
+      font-size: clamp(28px, 4.6vw, 40px);
       font-weight: 600; letter-spacing: -0.03em; line-height: 1.08;
     }
     .verdict {
-      margin: 0 0 28px; font-size: 18px; line-height: 1.4; color: var(--muted); max-width: 36em;
+      margin: 0 0 28px; font-size: 18px; line-height: 1.4; color: var(--muted); max-width: 38em;
     }
 
-    .unknown {
-      background: var(--bad-bg);
-      border: 1px solid #e8c4b0;
-      padding: 28px 24px 22px;
-      margin-bottom: 16px;
+    .hero {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;
     }
-    .unknown .k {
-      font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bad);
+    .hero .card {
+      background: var(--card); border: 1px solid var(--line); padding: 20px 20px 16px;
     }
-    .unknown .v {
-      margin: 8px 0 6px;
-      font-size: clamp(36px, 7vw, 56px);
-      font-weight: 600; letter-spacing: -0.04em; line-height: 0.95; color: var(--bad);
+    .hero .k {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--blue);
     }
-    .unknown p { margin: 0; font-size: 14px; line-height: 1.4; color: #6b3a28; max-width: 38em; }
-    .compare {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px;
+    .hero .v {
+      margin: 6px 0 4px; font-size: clamp(40px, 6vw, 52px); font-weight: 600; letter-spacing: -0.04em; line-height: 1;
     }
-    .compare div {
-      background: rgba(255,255,255,.55); padding: 10px 12px; font-size: 13px;
+    .hero .s { font-size: 13px; color: var(--muted); line-height: 1.35; }
+    .prior {
+      background: var(--card); border: 1px solid var(--line); padding: 12px 18px; margin-bottom: 16px;
+      font-size: 13px; color: var(--muted); line-height: 1.4;
     }
-    .compare .t { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
-    .compare b { font-size: 20px; font-weight: 600; }
+    .prior strong { color: var(--ink); }
 
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-    .card {
-      background: var(--card); border: 1px solid var(--line); padding: 16px 18px;
-    }
+    .card { background: var(--card); border: 1px solid var(--line); padding: 16px 18px; }
     .card .k {
       font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--blue);
     }
@@ -87,10 +78,7 @@
     .row:last-child { margin-bottom: 0; }
     .who { font-size: 13px; font-weight: 650; padding-bottom: 14px; }
     .bars { display: flex; align-items: flex-end; gap: 6px; height: 56px; }
-    .bar {
-      flex: 1; background: var(--blue); opacity: 0.32; border-radius: 2px 2px 0 0;
-      position: relative;
-    }
+    .bar { flex: 1; background: var(--blue); opacity: 0.32; border-radius: 2px 2px 0 0; position: relative; }
     .bar.last { opacity: 1; }
     .bar i {
       position: absolute; left: 0; right: 0; top: -14px; text-align: center;
@@ -99,9 +87,7 @@
     .months { display: flex; gap: 6px; margin: 4px 0 0 100px; }
     .months span { flex: 1; text-align: center; font-size: 10px; color: var(--muted); font-weight: 600; }
 
-    .units {
-      font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0 0 28px;
-    }
+    .units { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0 0 28px; }
     .units strong { color: var(--ink); }
 
     footer { font-size: 11px; line-height: 1.5; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
@@ -109,7 +95,7 @@
 
     @media (max-width: 640px) {
       .sheet { padding: 24px 16px 40px; }
-      .grid, .compare { grid-template-columns: 1fr; }
+      .hero, .grid { grid-template-columns: 1fr; }
       .months { margin-left: 0; }
       .row { grid-template-columns: 1fr; }
       .who { padding-bottom: 0; }
@@ -129,18 +115,22 @@
       <a href="../">All pages</a>
     </div>
 
-    <h1>Quality mixed. Output 2.9×. Crash-free users: we do not know.</h1>
-    <p class="verdict">Android store score is up this fiscal year. iOS is slightly down. Whether the app actually crashes less is not on this page.</p>
+    <h1>Last 90 days, 98.23% of iOS users and 98.95% of Android users did not crash.</h1>
+    <p class="verdict">Store scores mixed: Android up this fiscal year, iOS slightly down. Output 2.9×. Same 90-day crash-free window last year is not on this page.</p>
 
-    <div class="unknown">
-      <div class="k sans">Crash-free users · production · this stretch vs last year</div>
-      <div class="v">We do not know</div>
-      <p>Not in Firebase CLI. Not in the Crashlytics reports API. No sessions export. Until this is filled, shipping faster is not a quality result.</p>
-      <div class="compare sans">
-        <div><span class="t">1 Apr–23 Aug FY26</span><b>—</b></div>
-        <div><span class="t">Same stretch FY25</span><b>—</b></div>
+    <div class="hero">
+      <div class="card">
+        <div class="k sans">Crash-free users · iOS</div>
+        <div class="v">98.23%</div>
+        <div class="s">Last 90 days · production. ~1.77% of users hit a crash.</div>
+      </div>
+      <div class="card">
+        <div class="k sans">Crash-free users · Android</div>
+        <div class="v">98.95%</div>
+        <div class="s">Last 90 days · production. ~1.05% of users hit a crash.</div>
       </div>
     </div>
+    <p class="prior sans"><strong>Same stretch FY25:</strong> — &nbsp; Not supplied. Without it we cannot say crash-free got better while we shipped 2.9×.</p>
 
     <div class="grid">
       <div class="card">
@@ -187,8 +177,8 @@
 
     <footer class="sans">
       FY = 1 April–31 March.
-      Scores: AppFollow public store lifetime averages, collection OMRON Connect, iOS 1166317885 and Android com.omronhealthcare.omronconnect. Same method both platforms. Play Console monthly omitted so we do not mix thermometers.
-      Crash-free users: not exported by Firebase CLI or Crashlytics reports API.
+      Crash-free users: Crashlytics last 90 days as of 23 Aug 2026. Users metric, not sessions. FY25 same window not provided.
+      Scores: AppFollow public store lifetime averages, collection OMRON Connect, iOS 1166317885 and Android com.omronhealthcare.omronconnect. Same method both platforms.
       · <a href="https://github.com/royatluscii/prototypes/blob/main/connect-factory/index.html">Source</a>
     </footer>
   </div>
